@@ -1,0 +1,6 @@
+[package]
+name = "curiosity"
+version = "0.0.1"
+authors = ["Graham Lee <ghmlee@cosmos.io>"]
+
+[dependencies]
