@@ -4,3 +4,6 @@ version = "0.0.1"
 authors = ["Graham Lee <ghmlee@cosmos.io>"]
 
 [dependencies]
+unix_socket = "0.1.1"
+hyper = "0.3.0"
+url = "0.2.23"
