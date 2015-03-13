@@ -37,7 +37,7 @@ struct Container {
     //Ports: Vec<String>
 }
 
-fn run(host: &str) {
+fn run(host: &str, planet_name: &str) {
     let mut stream = match UnixStream::connect("/var/run/docker.sock") {
         Ok(stream) => stream,
         Err(e) => panic!("error stream connect: {}", e)
@@ -70,12 +70,12 @@ fn run(host: &str) {
     
     let decoded: Vec<Container> = json::decode(containers).unwrap();
     let encoded = json::encode(&decoded).unwrap();
-    println!("{}", host);
+    println!("{}", &*format!("http://{}/{}/containers", host, planet_name));
     println!("{}", encoded);
     
     let mime: Mime = "application/json".parse().unwrap();
     let mut client = Client::new();
-    let res = client.post(host)
+    let res = client.post(&*format!("http://{}/{}/containers", host, planet_name))
         .header(Connection(vec![ConnectionOption::Close]))
         .header(ContentType(mime))
         .header(Accept(vec![qitem(Mime(Application, Json, vec![]))]))
@@ -88,13 +88,18 @@ fn run(host: &str) {
 }
 
 fn main() {
-    let host = match env::var("HOST") {
-        Ok(val) => val,
-        Err(e) => panic!("error envionment variable: {}", e)
+    let host = match env::var("COSMOS_HOST") {
+        Ok(host) => host,
+        Err(e) => panic!("error environment variable: {}", e)
+    };
+
+    let planet_name = match env::var("COSMOS_PLANET_NAME") {
+        Ok(planet_name) => planet_name,
+        Err(e) => panic!("error environment variable: {}", e)
     };
     
     loop {
-        run(&host);
+        run(&host, &planet_name);
         timer::sleep(Duration::seconds(5));
     }
 }
