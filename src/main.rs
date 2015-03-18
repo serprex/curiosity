@@ -40,13 +40,19 @@ struct Container {
 fn run(host: &str, planet_name: &str) {
     let mut stream = match UnixStream::connect("/var/run/docker.sock") {
         Ok(stream) => stream,
-        Err(e) => panic!("error stream connect: {}", e)
+        Err(e) => {
+            println!("{}", e);
+            return;
+        }
     };
     let request = "GET /containers/json HTTP/1.1\r\n\r\n".as_bytes();
 
     match stream.write_all(request) {
         Ok(_) => {}
-        Err(e) => panic!("error stream write: {}", e)
+        Err(e) => {
+            println!("{}", e);
+            return;
+        }
     };
 
     const BUFFER_SIZE: usize = 1024;
@@ -55,12 +61,18 @@ fn run(host: &str, planet_name: &str) {
     loop {
         let len = match stream.read(&mut buf) {
             Ok(len) => len,
-            Err(e) => panic!("error stream read: {}", e)
+            Err(e) => {
+                println!("{}", e);
+                return;
+            }
         };
 
         match std::str::from_utf8(&buf[0 .. len]) {
             Ok(txt) => response.push_str(txt),
-            Err(e) => panic!("error stream read: {}", e)
+            Err(e) => {
+                println!("{}", e);
+                return;
+            }
         }
         if len < BUFFER_SIZE { break; }
     }
@@ -83,7 +95,10 @@ fn run(host: &str, planet_name: &str) {
         .send();
     match res {
         Ok(_) => {}
-        Err(e) => panic!("error http send: {}", e)
+        Err(e) => {
+            println!("{}", e);
+            return;
+        }
     }
 }
 
