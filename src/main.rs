@@ -1,5 +1,3 @@
-#![feature(io)]
-#![feature(old_io)]
 #![feature(std_misc)]
 extern crate unix_socket;
 extern crate hyper;
@@ -13,7 +11,6 @@ use std::old_io::timer;
 use std::time::Duration;
 
 use rustc_serialize::json;
-
 use unix_socket::UnixStream;
 use hyper::Client;
 use hyper::header::Connection;
@@ -105,12 +102,12 @@ fn run(host: &str, planet_name: &str) {
 fn main() {
     let host = match env::var("COSMOS_HOST") {
         Ok(host) => host,
-        Err(e) => panic!("error environment variable: {}", e)
+        Err(_) => panic!("COSMOS_HOST envrionment variable does not exist.")
     };
 
     let planet_name = match env::var("COSMOS_PLANET_NAME") {
         Ok(planet_name) => planet_name,
-        Err(e) => panic!("error environment variable: {}", e)
+        Err(_) => panic!("COSMOS_PLANET_NAME variable does not exist.")
     };
     
     loop {
