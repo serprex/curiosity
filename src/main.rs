@@ -76,10 +76,23 @@ fn run(host: &str, planet_name: &str) {
     }
     
     let split: Vec<&str> = response[..].split("\r\n\r\n").collect();
-    let containers = split[split.len() - 1];
-    println!("{}", containers);
+    //let header = split[0];
+    let body = split[1];
+    let chunked_body: Vec<&str> = body[..].split("\r\n").collect();
+    let mut containers = String::new();
     
-    let decoded: Vec<Container> = json::decode(containers).unwrap();
+    if chunked_body.len() == 1 {
+        containers.push_str(body);
+    } else {
+        let mut index: i64 = 0;
+        for x in chunked_body.iter() {
+            index = index + 1;
+            if index % 2 != 0 { continue; }
+            containers.push_str(x);
+        }
+    }
+
+    let decoded: Vec<Container> = json::decode(&containers).unwrap();
     let encoded = json::encode(&decoded).unwrap();
     println!("{}", &*format!("http://{}/v1/{}/containers", host, planet_name));
     println!("{}", encoded);
