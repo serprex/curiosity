@@ -1,4 +1,5 @@
 #![feature(std_misc)]
+#![feature(thread_sleep)]
 extern crate unix_socket;
 extern crate hyper;
 extern crate "rustc-serialize" as rustc_serialize;
@@ -7,8 +8,8 @@ use std::env;
 use std::io::Read;
 use std::io::Write;
 use std::string::String;
-use std::old_io::timer;
 use std::time::Duration;
+use std::thread;
 
 use rustc_serialize::json;
 use unix_socket::UnixStream;
@@ -112,6 +113,6 @@ fn main() {
     
     loop {
         run(&host, &planet_name);
-        timer::sleep(Duration::seconds(5));
+        thread::sleep(Duration::seconds(5));
     }
 }
