@@ -77,10 +77,11 @@ fn run(host: &str, planet_name: &str) {
     
     let split: Vec<&str> = response[..].split("\r\n\r\n").collect();
     let containers = split[split.len() - 1];
+    println!("{}", containers);
     
     let decoded: Vec<Container> = json::decode(containers).unwrap();
     let encoded = json::encode(&decoded).unwrap();
-    println!("{}", &*format!("http://{}/{}/containers", host, planet_name));
+    println!("{}", &*format!("http://{}/v1/{}/containers", host, planet_name));
     println!("{}", encoded);
     
     let mime: Mime = "application/json".parse().unwrap();
