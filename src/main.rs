@@ -10,6 +10,7 @@ use std::time::Duration;
 use std::thread;
 
 use docker::Docker;
+use docker::stats::Stats;
 use hyper::Client;
 use hyper::header::Connection;
 use hyper::header::ConnectionOption;
@@ -22,6 +23,19 @@ use hyper::mime::TopLevel::Application;
 use hyper::mime::SubLevel::Json;
 use rustc_serialize::json;
 
+#[derive(RustcEncodable, RustcDecodable)]
+#[allow(non_snake_case)]
+struct Data {
+    Id: String,
+    Image: String,
+    Status: String,
+    Command: String,
+    Created: f64,
+    Names: Vec<String>,
+    Ports: Vec<String>,
+    Stats: Stats
+}
+
 fn run(host: &str, planet_name: &str) {
     let docker = Docker::new();
     let containers = match docker.get_containers() {
@@ -29,7 +43,27 @@ fn run(host: &str, planet_name: &str) {
         Err(e) => { println!("{}", e); return; }
     };
 
-    let encoded_containers = json::encode(&containers).unwrap();
+    let mut container_stats: Vec<Data> = Vec::new();
+    for container in containers.iter() {
+        match docker.get_stats(&container) {
+            Err(e) => { println!("{}", e); return; }
+            Ok(stats) => {
+                let data = Data {
+                    Id: container.Id.clone(),
+                    Image: container.Image.clone(),
+                    Status: container.Status.clone(),
+                    Command: container.Command.clone(),
+                    Created: container.Created.clone(),
+                    Names: container.Names.clone(),
+                    Ports: container.Ports.clone(),
+                    Stats: stats
+                };
+                container_stats.push(data);
+            }
+        };
+    }
+
+    let encoded_containers = json::encode(&container_stats).unwrap();
     let mime: Mime = "application/json".parse().unwrap();
     let mut client = Client::new();
     let res = client.post(&*format!("http://{}/v1/planets/{}/containers", host, planet_name))
