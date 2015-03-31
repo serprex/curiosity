@@ -11,6 +11,7 @@ use std::thread;
 
 use docker::Docker;
 use docker::stats::Stats;
+use docker::container::Port;
 use hyper::Client;
 use hyper::header::Connection;
 use hyper::header::ConnectionOption;
@@ -32,7 +33,7 @@ struct Data {
     Command: String,
     Created: f64,
     Names: Vec<String>,
-    Ports: Vec<String>,
+    Ports: Vec<Port>,
     Stats: Stats
 }
 
