@@ -3,7 +3,7 @@
 
 extern crate docker;
 extern crate hyper;
-extern crate "rustc-serialize" as rustc_serialize;
+extern crate rustc_serialize;
 
 use std::env;
 use std::time::Duration;
@@ -32,7 +32,7 @@ fn run(host: &str, planet_name: &str) {
     let encoded_containers = json::encode(&containers).unwrap();
     let mime: Mime = "application/json".parse().unwrap();
     let mut client = Client::new();
-    let res = client.post(&*format!("http://{}/{}/containers", host, planet_name))
+    let res = client.post(&*format!("http://{}/v1/planets/{}/containers", host, planet_name))
         .header(Connection(vec![ConnectionOption::Close]))
         .header(ContentType(mime))
         .header(Accept(vec![qitem(Mime(Application, Json, vec![]))]))
