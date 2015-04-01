@@ -67,14 +67,15 @@ fn run(host: &str, planet_name: &str) {
     let encoded_containers = json::encode(&container_stats).unwrap();
     let mime: Mime = "application/json".parse().unwrap();
     let mut client = Client::new();
-    let res = client.post(&*format!("http://{}/v1/planets/{}/containers", host, planet_name))
+    let url = format!("http://{}/v1/planets/{}/containers", host, planet_name);
+    let res = client.post(&*url)
         .header(Connection(vec![ConnectionOption::Close]))
         .header(ContentType(mime))
         .header(Accept(vec![qitem(Mime(Application, Json, vec![]))]))
         .body(&*encoded_containers)
         .send();
     match res {
-        Ok(_) => { println!("success."); }
+        Ok(_) => { println!("{}", url); }
         Err(e) => { println!("{}", e); }
     }
 }
@@ -82,12 +83,19 @@ fn run(host: &str, planet_name: &str) {
 fn main() {
     let host = match env::var("COSMOS_HOST") {
         Ok(host) => host,
-        Err(_) => panic!("COSMOS_HOST envrionment variable does not exist.")
+        Err(_) => { panic!("COSMOS_HOST envrionment variable does not exist.") }
     };
 
     let planet_name = match env::var("COSMOS_PLANET_NAME") {
         Ok(planet_name) => planet_name,
-        Err(_) => panic!("COSMOS_PLANET_NAME variable does not exist.")
+        Err(_) => {
+            let docker = Docker::new();
+            let name = match docker.get_info() {
+                Ok(info) => info.Name,
+                Err(e) => { panic!("{}", e); }
+            };
+            name
+        }
     };
     
     loop {
