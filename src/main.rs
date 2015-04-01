@@ -2,7 +2,7 @@
 #![feature(thread_sleep)]
 
 extern crate docker;
-extern crate hyper;
+extern crate cosmos;
 extern crate rustc_serialize;
 
 use std::env;
@@ -12,16 +12,7 @@ use std::thread;
 use docker::Docker;
 use docker::stats::Stats;
 use docker::container::Port;
-use hyper::Client;
-use hyper::header::Connection;
-use hyper::header::ConnectionOption;
-
-use hyper::header::ContentType;
-use hyper::header::Accept;
-use hyper::header::qitem;
-use hyper::mime::Mime;
-use hyper::mime::TopLevel::Application;
-use hyper::mime::SubLevel::Json;
+use cosmos::Cosmos;
 use rustc_serialize::json;
 
 #[derive(RustcEncodable, RustcDecodable)]
@@ -65,19 +56,11 @@ fn run(host: &str, planet_name: &str) {
     }
 
     let encoded_containers = json::encode(&container_stats).unwrap();
-    let mime: Mime = "application/json".parse().unwrap();
-    let mut client = Client::new();
-    let url = format!("http://{}/v1/planets/{}/containers", host, planet_name);
-    let res = client.post(&*url)
-        .header(Connection(vec![ConnectionOption::Close]))
-        .header(ContentType(mime))
-        .header(Accept(vec![qitem(Mime(Application, Json, vec![]))]))
-        .body(&*encoded_containers)
-        .send();
-    match res {
-        Ok(_) => { println!("{}", url); }
+    let cosmos = Cosmos::new(host);
+    match cosmos.post_containers(planet_name, &encoded_containers) {
+        Ok(res) => { println!("{}", res); }
         Err(e) => { println!("{}", e); }
-    }
+    };
 }
 
 fn main() {
