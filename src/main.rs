@@ -74,7 +74,7 @@ fn run(host: &str, planet_name: &str) {
         .body(&*encoded_containers)
         .send();
     match res {
-        Ok(_) => { println!("{}", encoded_containers); }
+        Ok(_) => { println!("success."); }
         Err(e) => { println!("{}", e); }
     }
 }
