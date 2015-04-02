@@ -29,7 +29,17 @@ fn run(host: &str, planet_name: &str) {
             Err(e) => { println!("{}", e); return; }
             Ok(stats) => stats
         };
-        cosmos_containers.push(container.to_cosmos_container(&stats));
+
+        // setting interval
+        thread::sleep(Duration::seconds(1));
+
+        let delayed_stats = match docker.get_stats(&container) {
+            Err(e) => { println!("{}", e); return; }
+            Ok(stats) => stats
+        };
+
+        // using interval
+        cosmos_containers.push(container.to_cosmos_container(&stats, &delayed_stats, 1));
     }
 
     let encoded_cosmos_containers = json::encode(&cosmos_containers).unwrap();
