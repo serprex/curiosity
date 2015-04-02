@@ -43,32 +43,54 @@ pub struct Memory {
 }
 
 pub trait CosmosContainerDecodable {
-    fn to_cosmos_container(&self, stats: &docker::stats::Stats) -> Container;
+    fn to_cosmos_container(&self,
+                           stats: &docker::stats::Stats,
+                           delayed_stats: &docker::stats::Stats,
+                           interval: i8) -> Container;
 }
 
 impl CosmosContainerDecodable for docker::container::Container {
-    fn to_cosmos_container(&self, stats: &docker::stats::Stats) -> Container {
+    fn to_cosmos_container(&self,
+                           stats: &docker::stats::Stats,
+                           delayed_stats: &docker::stats::Stats,
+                           interval: i8) -> Container {
+        // network
         let network = Network {
-            RxBytes: stats.network.rx_bytes,
-            TxBytes: stats.network.tx_bytes
+            RxBytes: delayed_stats.network.rx_bytes,
+            TxBytes: delayed_stats.network.tx_bytes
         };
+
+        // memory
+        let memory = Memory {
+            Limit: delayed_stats.memory_stats.limit,
+            Usage: delayed_stats.memory_stats.usage
+        };
+
+        // cpu
+        let cpus = stats.cpu_stats.cpu_usage.percpu_usage.len();
+        let total_usage = stats.cpu_stats.cpu_usage.total_usage;
+        let delayed_total_usage = delayed_stats.cpu_stats.cpu_usage.total_usage;
+        let total_percent = get_percent(total_usage, delayed_total_usage, interval, cpus);
+
+        let mut percpus: Vec<f64> = Vec::new();
+        for i in 0..cpus {
+            let val = stats.cpu_stats.cpu_usage.percpu_usage[i];
+            let delayed_val = delayed_stats.cpu_stats.cpu_usage.percpu_usage[i];
+            let percent = get_percent(val, delayed_val, interval, cpus);
+            percpus.push(percent);
+        }
 
         let cpu = Cpu {
-            TotalUtilization: stats.cpu_stats.cpu_usage.total_usage, // fix value
-            PerCpuUtilization: stats.cpu_stats.cpu_usage.percpu_usage.clone()
+            TotalUtilization: total_percent,
+            PerCpuUtilization: percpus
         };
 
-        let memory = Memory {
-            Limit: stats.memory_stats.limit,
-            Usage: stats.memory_stats.usage
-        };
-        
         let stats = Stats {
             Network: network,
             Cpu: cpu,
             Memory: memory
         };
-        
+
         let container = Container {
             Id: self.Id.clone(),
             Image: self.Image.clone(),
@@ -79,7 +101,16 @@ impl CosmosContainerDecodable for docker::container::Container {
             Ports: self.Ports.clone(),
             Stats: stats
         };
-        
+
         return container;
     }
+}
+
+fn get_percent(val: f64, delayed_val: f64, interval: i8, cpus: usize) -> f64 {
+    let delta = delayed_val - val;
+    let dpns = delta - interval as f64;
+    let dps = dpns / 1000000000 as f64;
+    let mut percent = dps / cpus as f64;
+    if percent <= 0.0 { percent = 0.0; }
+    return percent;
 }
