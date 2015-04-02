@@ -5,28 +5,16 @@ extern crate docker;
 extern crate cosmos;
 extern crate rustc_serialize;
 
-use std::env;
+mod model;
+
+use std::{env, thread};
 use std::time::Duration;
-use std::thread;
+
+use model::{Container, CosmosContainerDecodable};
 
 use docker::Docker;
-use docker::stats::Stats;
-use docker::container::Port;
 use cosmos::Cosmos;
 use rustc_serialize::json;
-
-#[derive(RustcEncodable, RustcDecodable)]
-#[allow(non_snake_case)]
-struct Data {
-    Id: String,
-    Image: String,
-    Status: String,
-    Command: String,
-    Created: f64,
-    Names: Vec<String>,
-    Ports: Vec<Port>,
-    Stats: Stats
-}
 
 fn run(host: &str, planet_name: &str) {
     let docker = Docker::new();
@@ -35,29 +23,18 @@ fn run(host: &str, planet_name: &str) {
         Err(e) => { println!("{}", e); return; }
     };
 
-    let mut container_stats: Vec<Data> = Vec::new();
+    let mut cosmos_containers: Vec<Container> = Vec::new();
     for container in containers.iter() {
-        match docker.get_stats(&container) {
+        let stats = match docker.get_stats(&container) {
             Err(e) => { println!("{}", e); return; }
-            Ok(stats) => {
-                let data = Data {
-                    Id: container.Id.clone(),
-                    Image: container.Image.clone(),
-                    Status: container.Status.clone(),
-                    Command: container.Command.clone(),
-                    Created: container.Created.clone(),
-                    Names: container.Names.clone(),
-                    Ports: container.Ports.clone(),
-                    Stats: stats
-                };
-                container_stats.push(data);
-            }
+            Ok(stats) => stats
         };
+        cosmos_containers.push(container.to_cosmos_container(&stats));
     }
 
-    let encoded_containers = json::encode(&container_stats).unwrap();
+    let encoded_cosmos_containers = json::encode(&cosmos_containers).unwrap();
     let cosmos = Cosmos::new(host);
-    match cosmos.post_containers(planet_name, &encoded_containers) {
+    match cosmos.post_containers(planet_name, &encoded_cosmos_containers) {
         Ok(res) => { println!("{}", res); }
         Err(e) => { println!("{}", e); }
     };
