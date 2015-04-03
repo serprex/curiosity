@@ -1,6 +1,3 @@
-#![feature(std_misc)]
-#![feature(thread_sleep)]
-
 extern crate docker;
 extern crate cosmos;
 extern crate rustc_serialize;
@@ -8,7 +5,6 @@ extern crate rustc_serialize;
 mod model;
 
 use std::{env, thread};
-use std::time::Duration;
 
 use model::{Container, CosmosContainerDecodable};
 
@@ -31,7 +27,7 @@ fn run(host: &str, planet_name: &str) {
         };
 
         // setting interval
-        thread::sleep(Duration::seconds(1));
+        thread::sleep_ms(1000);
 
         let delayed_stats = match docker.get_stats(&container) {
             Err(e) => { println!("{}", e); return; }
@@ -70,6 +66,6 @@ fn main() {
     
     loop {
         run(&host, &planet_name);
-        thread::sleep(Duration::seconds(5));
+        thread::sleep_ms(5000);
     }
 }
