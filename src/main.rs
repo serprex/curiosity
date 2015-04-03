@@ -39,6 +39,7 @@ fn run(host: &str, planet_name: &str) {
     }
 
     let encoded_cosmos_containers = json::encode(&cosmos_containers).unwrap();
+    println!("{}", encoded_cosmos_containers);
     let cosmos = Cosmos::new(host);
     match cosmos.post_containers(planet_name, &encoded_cosmos_containers) {
         Ok(res) => { println!("{}", res); }
