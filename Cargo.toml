@@ -4,6 +4,6 @@ version = "0.0.1"
 authors = ["Graham Lee <ghmlee@cosmos.io>"]
 
 [dependencies]
-docker = "0.0.10"
+docker = "0.0.11"
 cosmos = "0.0.4"
 rustc-serialize = "0.3.12"
