@@ -7,7 +7,7 @@ pub struct Container {
     Image: String,
     Status: String,
     Command: String,
-    Created: f64,
+    Created: i64,
     Names: Vec<String>,
     Ports: Vec<docker::container::Port>,
     Stats: Stats
@@ -24,8 +24,8 @@ pub struct Stats {
 #[derive(RustcEncodable, RustcDecodable)]
 #[allow(non_snake_case)]
 pub struct Network {
-    RxBytes: f64,
-    TxBytes: f64
+    RxBytes: i64,
+    TxBytes: i64
 }
 
 #[derive(RustcEncodable, RustcDecodable)]
@@ -38,22 +38,22 @@ pub struct Cpu {
 #[derive(RustcEncodable, RustcDecodable)]
 #[allow(non_snake_case)]
 pub struct Memory {
-    Limit: f64,
-    Usage: f64
+    Limit: i64,
+    Usage: i64
 }
 
 pub trait CosmosContainerDecodable {
     fn to_cosmos_container(&self,
                            stats: &docker::stats::Stats,
                            delayed_stats: &docker::stats::Stats,
-                           interval: i8) -> Container;
+                           interval: i64) -> Container;
 }
 
 impl CosmosContainerDecodable for docker::container::Container {
     fn to_cosmos_container(&self,
                            stats: &docker::stats::Stats,
                            delayed_stats: &docker::stats::Stats,
-                           interval: i8) -> Container {
+                           interval: i64) -> Container {
         // network
         let network = Network {
             RxBytes: delayed_stats.network.rx_bytes,
@@ -106,11 +106,11 @@ impl CosmosContainerDecodable for docker::container::Container {
     }
 }
 
-fn get_percent(val: f64, delayed_val: f64, interval: i8, cpus: usize) -> f64 {
+fn get_percent(val: i64, delayed_val: i64, interval: i64, cpus: usize) -> f64 {
     let delta = delayed_val - val;
-    let dpns = delta - interval as f64;
-    let dps = dpns / 1000000000 as f64;
-    let mut percent = dps / cpus as f64;
+    let dpns = (delta - interval) as f64;
+    let dps = dpns / (1000000000 as f64);
+    let mut percent = dps / (cpus as f64);
     if percent <= 0.0 { percent = 0.0; }
     return percent;
 }

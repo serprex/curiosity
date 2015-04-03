@@ -1,4 +1,4 @@
-FROM cosmosio/rust
+FROM cosmosio/rust:nightly
 MAINTAINER Graham Lee <ghmlee@cosmos.io>
 
 ADD . /curiosity
