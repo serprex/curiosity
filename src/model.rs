@@ -45,15 +45,13 @@ pub struct Memory {
 pub trait CosmosContainerDecodable {
     fn to_cosmos_container(&self,
                            stats: &docker::stats::Stats,
-                           delayed_stats: &docker::stats::Stats,
-                           interval: i64) -> Container;
+                           delayed_stats: &docker::stats::Stats) -> Container;
 }
 
 impl CosmosContainerDecodable for docker::container::Container {
     fn to_cosmos_container(&self,
                            stats: &docker::stats::Stats,
-                           delayed_stats: &docker::stats::Stats,
-                           interval: i64) -> Container {
+                           delayed_stats: &docker::stats::Stats) -> Container {
         // network
         let network = Network {
             RxBytes: delayed_stats.network.rx_bytes,
@@ -68,15 +66,18 @@ impl CosmosContainerDecodable for docker::container::Container {
 
         // cpu
         let cpus = stats.cpu_stats.cpu_usage.percpu_usage.len();
+
         let total_usage = stats.cpu_stats.cpu_usage.total_usage;
         let delayed_total_usage = delayed_stats.cpu_stats.cpu_usage.total_usage;
-        let total_percent = get_percent(total_usage, delayed_total_usage, interval, cpus);
+        let system_usage = stats.cpu_stats.system_cpu_usage;
+        let delayed_system_usage = delayed_stats.cpu_stats.system_cpu_usage;
+        let total_percent = get_cpu_percent(total_usage, delayed_total_usage, system_usage, delayed_system_usage, cpus);
 
         let mut percpus: Vec<f64> = Vec::new();
         for i in 0..cpus {
             let val = stats.cpu_stats.cpu_usage.percpu_usage[i];
             let delayed_val = delayed_stats.cpu_stats.cpu_usage.percpu_usage[i];
-            let percent = get_percent(val, delayed_val, interval, cpus);
+            let percent = get_cpu_percent(val, delayed_val, system_usage, delayed_system_usage, cpus);
             percpus.push(percent);
         }
 
@@ -106,11 +107,10 @@ impl CosmosContainerDecodable for docker::container::Container {
     }
 }
 
-fn get_percent(val: i64, delayed_val: i64, interval: i64, cpus: usize) -> f64 {
-    let delta = delayed_val - val;
-    let dpns = (delta - interval) as f64;
-    let dps = dpns / (1000000000 as f64);
-    let mut percent = dps / (cpus as f64);
+fn get_cpu_percent(cpu_val: i64, delayed_cpu_val: i64, system_val: i64, delayed_system_val: i64, cpus: usize) -> f64 {
+    let cpu_val_delta: f64 = (delayed_cpu_val - cpu_val) as f64;
+    let system_val_delta: f64 = (delayed_system_val - system_val) as f64;
+    let mut percent = (cpu_val_delta / system_val_delta) * cpus as f64 * 100.0 as f64;
     if percent <= 0.0 { percent = 0.0; }
     return percent;
 }
