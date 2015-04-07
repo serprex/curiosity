@@ -5,9 +5,7 @@ extern crate rustc_serialize;
 mod model;
 
 use std::{env, thread};
-
 use model::{Container, CosmosContainerDecodable};
-
 use docker::Docker;
 use cosmos::Cosmos;
 use rustc_serialize::json;
@@ -26,16 +24,14 @@ fn run(host: &str, planet_name: &str) {
             Ok(stats) => stats
         };
 
-        // setting interval
-        thread::sleep_ms(1000);
+        thread::sleep_ms(500);
 
         let delayed_stats = match docker.get_stats(&container) {
             Err(e) => { println!("{}", e); return; }
             Ok(stats) => stats
         };
 
-        // using interval
-        cosmos_containers.push(container.to_cosmos_container(&stats, &delayed_stats, 1));
+        cosmos_containers.push(container.to_cosmos_container(&stats, &delayed_stats));
     }
 
     let encoded_cosmos_containers = json::encode(&cosmos_containers).unwrap();
@@ -64,8 +60,10 @@ fn main() {
         }
     };
     
+    let interval: u32 = 5000; // ms, will be an option
+
     loop {
         run(&host, &planet_name);
-        thread::sleep_ms(5000);
+        thread::sleep_ms(interval);
     }
 }
