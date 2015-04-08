@@ -12,7 +12,7 @@ use rustc_serialize::json;
 
 fn run(host: &str, planet_name: &str) {
     let docker = Docker::new();
-    let containers = match docker.get_containers() {
+    let containers = match docker.get_containers(true) {
         Ok(containers) => containers,
         Err(e) => { println!("{}", e); return; }
     };
