@@ -90,19 +90,40 @@ impl CosmosContainerDecodable for docker::container::Container {
             PerCpuUtilization: percpus
         };
 
+        // stats
         let stats = Stats {
             Network: network,
             Cpu: cpu,
             Memory: memory
         };
 
+        // names
+        let mut names: Vec<String> = Vec::new();
+        for name in self.Names.iter() {
+            let is_contained = name.as_bytes()[0] == "/".as_bytes()[0];
+            match is_contained {
+                true => {
+                    let mut index = 0;
+                    let mut new_name: Vec<u8> = Vec::new();
+                    for b in name.as_bytes() {
+                        index += 1;
+                        if index == 1 { continue; }
+                        new_name.push(*b);
+                    }
+                    names.push(String::from_utf8(new_name).unwrap());
+                }
+                false => { names.push(name.clone()); }
+            };
+        }
+
+        // container
         let container = Container {
             Id: self.Id.clone(),
             Image: self.Image.clone(),
             Status: self.Status.clone(),
             Command: self.Command.clone(),
             Created: self.Created.clone(),
-            Names: self.Names.clone(),
+            Names: names,
             Ports: self.Ports.clone(),
             Stats: stats
         };
