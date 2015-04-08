@@ -7,7 +7,7 @@ pub struct Container {
     Image: String,
     Status: String,
     Command: String,
-    Created: i64,
+    Created: u64,
     Names: Vec<String>,
     Ports: Vec<docker::container::Port>,
     Stats: Stats
@@ -24,10 +24,10 @@ pub struct Stats {
 #[derive(RustcEncodable, RustcDecodable)]
 #[allow(non_snake_case)]
 pub struct Network {
-    RxBytes: i64,
-    TxBytes: i64,
-    RxBytesDelta: i64,
-    TxBytesDelta: i64
+    RxBytes: u64,
+    TxBytes: u64,
+    RxBytesDelta: u64,
+    TxBytesDelta: u64
 }
 
 #[derive(RustcEncodable, RustcDecodable)]
@@ -40,8 +40,8 @@ pub struct Cpu {
 #[derive(RustcEncodable, RustcDecodable)]
 #[allow(non_snake_case)]
 pub struct Memory {
-    Limit: i64,
-    Usage: i64
+    Limit: u64,
+    Usage: u64
 }
 
 pub trait CosmosContainerDecodable {
@@ -132,10 +132,10 @@ impl CosmosContainerDecodable for docker::container::Container {
     }
 }
 
-fn get_cpu_percent(cpu_val: i64,
-                   delayed_cpu_val: i64,
-                   system_val: i64,
-                   delayed_system_val: i64,
+fn get_cpu_percent(cpu_val: u64,
+                   delayed_cpu_val: u64,
+                   system_val: u64,
+                   delayed_system_val: u64,
                    cpus: usize) -> f64 {
     let cpu_val_delta: f64 = (delayed_cpu_val - cpu_val) as f64;
     let system_val_delta: f64 = (delayed_system_val - system_val) as f64;
