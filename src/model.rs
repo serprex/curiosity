@@ -25,7 +25,9 @@ pub struct Stats {
 #[allow(non_snake_case)]
 pub struct Network {
     RxBytes: i64,
-    TxBytes: i64
+    TxBytes: i64,
+    RxBytesDelta: i64,
+    TxBytesDelta: i64
 }
 
 #[derive(RustcEncodable, RustcDecodable)]
@@ -55,7 +57,9 @@ impl CosmosContainerDecodable for docker::container::Container {
         // network
         let network = Network {
             RxBytes: delayed_stats.network.rx_bytes,
-            TxBytes: delayed_stats.network.tx_bytes
+            TxBytes: delayed_stats.network.tx_bytes,
+            RxBytesDelta: delayed_stats.network.rx_bytes - stats.network.rx_bytes,
+            TxBytesDelta: delayed_stats.network.tx_bytes - stats.network.tx_bytes
         };
 
         // memory
@@ -107,7 +111,11 @@ impl CosmosContainerDecodable for docker::container::Container {
     }
 }
 
-fn get_cpu_percent(cpu_val: i64, delayed_cpu_val: i64, system_val: i64, delayed_system_val: i64, cpus: usize) -> f64 {
+fn get_cpu_percent(cpu_val: i64,
+                   delayed_cpu_val: i64,
+                   system_val: i64,
+                   delayed_system_val: i64,
+                   cpus: usize) -> f64 {
     let cpu_val_delta: f64 = (delayed_cpu_val - cpu_val) as f64;
     let system_val_delta: f64 = (delayed_system_val - system_val) as f64;
     let mut percent = (cpu_val_delta / system_val_delta) * cpus as f64 * 100.0 as f64;
