@@ -31,3 +31,8 @@ fn main() {
     let curiosity = Curiosity::new();
     curiosity.run(&host, &planet_name, interval);
 }
+
+#[test]
+fn test() {
+    let _ = Curiosity::new();
+}

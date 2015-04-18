@@ -1,5 +1,6 @@
 use std::thread;
-use std::sync::mpsc::{self, Sender, Receiver};
+use std::sync::{Arc, RwLock};
+use std::sync::mpsc::{self, Receiver};
 use time;
 use cosmos::Cosmos;
 use container;
@@ -16,48 +17,45 @@ impl Curiosity {
         let planet_name = planet_name.to_string();
         
         let mut last_timestamp = time::precise_time_s() as u64;
-        let mut last_containers = String::new();
+        let lock = Arc::new(RwLock::new(String::new()));
+        let lock_copy = lock.clone();
         
-        let (container_tx, container_rx) = mpsc::channel();
-        let (cosmos_tx, cosmos_rx) = mpsc::channel();
-        
-        thread::spawn(move|| { Curiosity::get_containers(&container_tx); });
-        thread::spawn(move|| { Curiosity::post_containers(&cosmos_rx, &host, &planet_name); });
+        let (tx, rx) = mpsc::channel();
+        thread::spawn(move|| { Curiosity::get_containers(&lock); });
+        thread::spawn(move|| { Curiosity::post_containers(&rx, &host, &planet_name); });
 
         loop {
             let current_timestamp = time::precise_time_s() as u64;
             let diff = current_timestamp - last_timestamp;
+            if diff < interval { thread::sleep_ms(1 * 1000); continue; }
+            last_timestamp = current_timestamp;
             
-            if diff >= interval {
-                let containers = last_containers.clone();
-                match cosmos_tx.send(containers) {
-                    Ok(_) => {}
-                    Err(e) => { println!("{}", e); continue; }
-                };
-                last_timestamp = current_timestamp;
-            }
-            
-            let containers = match container_rx.try_recv() {
-                Ok(containers) => containers,
-                Err(_) => { thread::sleep_ms(100); continue; }
+            thread::sleep_ms(1);
+            let val = match lock_copy.read() {
+                Ok(val) => val,
+                Err(_) => { continue; }
             };
-            
-            last_containers = containers.to_string();
+
+            match tx.send(val.clone()) {
+                Ok(_) => {}
+                Err(e) => { println!("{}", e); continue; }
+            }
         }
     }
     
-    fn get_containers(tx: &Sender<String>) {
-        let tx = tx.clone();
+    fn get_containers(lock: &RwLock<String>) {
         loop {
             let containers = match container::get_containers_as_str() {
                 Ok(containers) => containers,
                 Err(e) => { println!("{}", e); continue; }
             };
 
-            match tx.send(containers) {
-                Ok(_) => {}
-                Err(e) => { println!("{}", e); continue; }
+            thread::sleep_ms(1);
+            let mut val = match lock.write() {
+                Ok(val) => val,
+                Err(_) => { continue; }
             };
+            *val = containers;
         }
     }
 
