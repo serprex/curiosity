@@ -1,66 +1,56 @@
-use std::io;
+use std::io::{Result, Error, ErrorKind};
 use docker;
-use rustc_serialize::json;
 
-pub fn get_containers_as_str() -> io::Result<String> {
+pub fn get_containers() -> Result<Vec<docker::container::Container>> {
     let docker = docker::Docker::new();
     let containers = match docker.get_containers(true) {
         Ok(containers) => containers,
         Err(e) => {
             println!("{}", e);
-            let err = io::Error::new(io::ErrorKind::ConnectionAborted,
-                                     "A connection to Docker is aborted.");
+            let err = Error::new(ErrorKind::ConnectionAborted,
+                                 "A connection is aborted");
             return Err(err);
         }
     };
-
-    let mut cosmos_containers: Vec<Container> = Vec::new();
-    for container in containers.iter() {
-        let stats = match docker.get_stats(&container) {
-            Ok(stats) => stats,
-            Err(e) => {
-                println!("{}", e);
-                let err = io::Error::new(io::ErrorKind::ConnectionAborted,
-                                         "A connection to Docker is aborted.");
-                return Err(err);
-            }
-        };
-
-        let delayed_stats = match docker.get_stats(&container) {
-            Ok(stats) => stats,
-            Err(e) => {
-                println!("{}", e);
-                let err = io::Error::new(io::ErrorKind::ConnectionAborted,
-                                         "A connection to Docker is aborted.");
-                return Err(err);
-            }
-        };
-
-        cosmos_containers.push(container.to_cosmos_container(&stats, &delayed_stats));
-    }
-
-    let encoded_cosmos_containers = match json::encode(&cosmos_containers) {
-        Ok(s) => s,
-        Err(e) => {
-            println!("{}", e);
-            let err = io::Error::new(io::ErrorKind::InvalidInput,
-                                     "Encoding is failed for containers.");
-            return Err(err);
-        }
-    };
-
-    return Ok(encoded_cosmos_containers);
+    return Ok(containers);
 }
 
-pub fn get_hostname() -> io::Result<String> {
+pub fn get_stats_as_cosmos_container(container: &docker::container::Container) -> Result<Container> {
+    let docker = docker::Docker::new();
+    let stats = match docker.get_stats(container) {
+        Ok(stats) => stats,
+        Err(e) => {
+            println!("{}", e);
+            let err = Error::new(ErrorKind::ConnectionAborted,
+                                 "A connection is aborted.");
+            return Err(err);
+        }
+    };
+
+    let delayed_stats = match docker.get_stats(container) {
+        Ok(stats) => stats,
+        Err(e) => {
+            println!("{}", e);
+            let err = Error::new(ErrorKind::ConnectionAborted,
+                                 "A connection is aborted.");
+            return Err(err);
+        }
+    };
+
+    let cosmos_container = container.to_cosmos_container(&stats, &delayed_stats);
+    return Ok(cosmos_container);
+    //println!("{}", cosmos_container.Stats.Cpu.TotalUtilization);
+}
+
+pub fn get_hostname() -> Result<String> {
     let docker = docker::Docker::new();
 
     let hostname = match docker.get_info() {
         Ok(info) => info.Name,
         Err(e) => {
             println!("{}", e);
-            let err = io::Error::new(io::ErrorKind::NotConnected,
-                                     "A connection to Docker is aborted.");
+            let err = Error::new(ErrorKind::NotConnected,
+                                 "A connection to Docker is aborted.");
             return Err(err);
         }
     };
@@ -157,7 +147,9 @@ impl CosmosContainerDecodable for docker::container::Container {
             Created: self.Created.clone(),
             Names: names,
             Ports: self.Ports.clone(),
-            Stats: stats
+            Stats: stats,
+            SizeRw: self.SizeRw,
+            SizeRootFs: self.SizeRootFs
         };
 
         return container;
@@ -178,44 +170,107 @@ fn get_cpu_percent(cpu_val: u64,
 
 #[derive(RustcEncodable, RustcDecodable)]
 #[allow(non_snake_case)]
-struct Container {
-    Id: String,
-    Image: String,
-    Status: String,
-    Command: String,
-    Created: u64,
-    Names: Vec<String>,
-    Ports: Vec<docker::container::Port>,
-    Stats: Stats
+pub struct Container {
+    pub Id: String,
+    pub Image: String,
+    pub Status: String,
+    pub Command: String,
+    pub Created: u64,
+    pub Names: Vec<String>,
+    pub Ports: Vec<docker::container::Port>,
+    pub Stats: Stats,
+    pub SizeRw: u64,
+    pub SizeRootFs: u64
 }
 
 #[derive(RustcEncodable, RustcDecodable)]
 #[allow(non_snake_case)]
-struct Stats {
-    Network: Network,
-    Cpu: Cpu,
-    Memory: Memory
+pub struct Stats {
+    pub Network: Network,
+    pub Cpu: Cpu,
+    pub Memory: Memory
 }
 
 #[derive(RustcEncodable, RustcDecodable)]
 #[allow(non_snake_case)]
-struct Network {
-    RxBytes: u64,
-    TxBytes: u64,
-    RxBytesDelta: u64,
-    TxBytesDelta: u64
+pub struct Network {
+    pub RxBytes: u64,
+    pub TxBytes: u64,
+    pub RxBytesDelta: u64,
+    pub TxBytesDelta: u64
 }
 
 #[derive(RustcEncodable, RustcDecodable)]
 #[allow(non_snake_case)]
-struct Cpu {
-    TotalUtilization: f64,
-    PerCpuUtilization: Vec<f64>
+pub struct Cpu {
+    pub TotalUtilization: f64,
+    pub PerCpuUtilization: Vec<f64>
 }
 
 #[derive(RustcEncodable, RustcDecodable)]
 #[allow(non_snake_case)]
-struct Memory {
-    Limit: u64,
-    Usage: u64
+pub struct Memory {
+    pub Limit: u64,
+    pub Usage: u64
+}
+
+impl Clone for Container {
+    fn clone(&self) -> Self {
+        let container = Container {
+            Id: self.Id.clone(),
+            Image: self.Image.clone(),
+            Status: self.Status.clone(),
+            Command: self.Command.clone(),
+            Created: self.Created,
+            Names: self.Names.clone(),
+            Ports: self.Ports.clone(),
+            Stats: self.Stats.clone(),
+            SizeRw: self.SizeRw,
+            SizeRootFs: self.SizeRootFs
+        };
+        return container;
+    }
+}
+
+impl Clone for Stats {
+    fn clone(&self) -> Self {
+        let stats = Stats {
+            Network: self.Network.clone(),
+            Cpu: self.Cpu.clone(),
+            Memory: self.Memory.clone()
+        };
+        return stats;
+    }
+}
+
+impl Clone for Network {
+    fn clone(&self) -> Self {
+        let network = Network {
+            RxBytes: self.RxBytes,
+            TxBytes: self.TxBytes,
+            RxBytesDelta: self.RxBytesDelta,
+            TxBytesDelta: self.TxBytesDelta
+        };
+        return network;
+    }
+}
+
+impl Clone for Cpu {
+    fn clone(&self) -> Self {
+        let cpu = Cpu {
+            TotalUtilization: self.TotalUtilization,
+            PerCpuUtilization: self.PerCpuUtilization.clone()
+        };
+        return cpu;
+    }
+}
+
+impl Clone for Memory {
+    fn clone(&self) -> Self {
+        let memory = Memory {
+            Limit: self.Limit,
+            Usage: self.Usage,
+        };
+        return memory;
+    }
 }
