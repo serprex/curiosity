@@ -124,10 +124,14 @@ impl Curiosity {
             };
 
             let cosmos = Cosmos::new(host);
-            match cosmos.post_containers(planet_name, &containers) {
-                Ok(_) => {}
-                Err(e) => { println!("{}", e); }
+            let res = match cosmos.post_containers(planet_name, &containers) {
+                Ok(res) => res,
+                Err(e) => { println!("{}", e); continue; }
             };
+
+            if res.status_code / 100 == 2 { continue; }
+
+            println!("status code: {}\nbody: {}", res.status_code, res.body);
         }
     }
 }
