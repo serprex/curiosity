@@ -316,12 +316,43 @@
 <span id="274">274</span>
 <span id="275">275</span>
 <span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
 </pre><pre class='rust '>
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>::{<span class='prelude-ty'>Result</span>, <span class='ident'>Error</span>, <span class='ident'>ErrorKind</span>};
 <span class='kw'>use</span> <span class='ident'>docker</span>;
 
 <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>get_containers</span>() <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>docker</span>::<span class='ident'>container</span>::<span class='ident'>Container</span><span class='op'>&gt;&gt;</span> {
-    <span class='kw'>let</span> <span class='ident'>docker</span> <span class='op'>=</span> <span class='ident'>docker</span>::<span class='ident'>Docker</span>::<span class='ident'>new</span>();
+    <span class='kw'>let</span> <span class='ident'>docker</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>docker</span>::<span class='ident'>Docker</span>::<span class='ident'>connect</span>(<span class='string'>&quot;unix:///var/run/docker.sock&quot;</span>) {
+        <span class='prelude-val'>Ok</span>(<span class='ident'>docker</span>) <span class='op'>=&gt;</span> <span class='ident'>docker</span>,
+        <span class='prelude-val'>Err</span>(<span class='ident'>e</span>) <span class='op'>=&gt;</span> {
+            <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;{}&quot;</span>, <span class='ident'>e</span>);
+            <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>NotConnected</span>,
+                                 <span class='string'>&quot;The connection is not connected.&quot;</span>);
+            <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
+        }
+    };
     <span class='kw'>let</span> <span class='ident'>containers</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>docker</span>.<span class='ident'>get_containers</span>(<span class='boolval'>true</span>) {
         <span class='prelude-val'>Ok</span>(<span class='ident'>containers</span>) <span class='op'>=&gt;</span> <span class='ident'>containers</span>,
         <span class='prelude-val'>Err</span>(<span class='ident'>e</span>) <span class='op'>=&gt;</span> {
@@ -335,12 +366,20 @@
 }
 
 <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>get_stats_as_cosmos_container</span>(<span class='ident'>container</span>: <span class='kw-2'>&amp;</span><span class='ident'>docker</span>::<span class='ident'>container</span>::<span class='ident'>Container</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>Container</span><span class='op'>&gt;</span> {
-    <span class='kw'>let</span> <span class='ident'>docker</span> <span class='op'>=</span> <span class='ident'>docker</span>::<span class='ident'>Docker</span>::<span class='ident'>new</span>();
+    <span class='kw'>let</span> <span class='ident'>docker</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>docker</span>::<span class='ident'>Docker</span>::<span class='ident'>connect</span>(<span class='string'>&quot;unix:///var/run/docker.sock&quot;</span>) {
+        <span class='prelude-val'>Ok</span>(<span class='ident'>docker</span>) <span class='op'>=&gt;</span> <span class='ident'>docker</span>,
+        <span class='prelude-val'>Err</span>(<span class='ident'>e</span>) <span class='op'>=&gt;</span> {
+            <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;{}&quot;</span>, <span class='ident'>e</span>);
+            <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>NotConnected</span>,
+                                 <span class='string'>&quot;The connection is not connected.&quot;</span>);
+            <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
+        }
+    };
     <span class='kw'>let</span> <span class='ident'>stats</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>docker</span>.<span class='ident'>get_stats</span>(<span class='ident'>container</span>) {
         <span class='prelude-val'>Ok</span>(<span class='ident'>stats</span>) <span class='op'>=&gt;</span> <span class='ident'>stats</span>,
         <span class='prelude-val'>Err</span>(<span class='ident'>e</span>) <span class='op'>=&gt;</span> {
             <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;{}&quot;</span>, <span class='ident'>e</span>);
-            <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>ConnectionAborted</span>,
+            <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>NotConnected</span>,
                                  <span class='string'>&quot;A connection is aborted.&quot;</span>);
             <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
         }
@@ -362,8 +401,15 @@
 }
 
 <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>get_hostname</span>() <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span> {
-    <span class='kw'>let</span> <span class='ident'>docker</span> <span class='op'>=</span> <span class='ident'>docker</span>::<span class='ident'>Docker</span>::<span class='ident'>new</span>();
-
+    <span class='kw'>let</span> <span class='ident'>docker</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>docker</span>::<span class='ident'>Docker</span>::<span class='ident'>connect</span>(<span class='string'>&quot;unix:///var/run/docker.sock&quot;</span>) {
+        <span class='prelude-val'>Ok</span>(<span class='ident'>docker</span>) <span class='op'>=&gt;</span> <span class='ident'>docker</span>,
+        <span class='prelude-val'>Err</span>(<span class='ident'>e</span>) <span class='op'>=&gt;</span> {
+            <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;{}&quot;</span>, <span class='ident'>e</span>);
+            <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>NotConnected</span>,
+                                 <span class='string'>&quot;The connection is not connected.&quot;</span>);
+            <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
+        }
+    };
     <span class='kw'>let</span> <span class='ident'>hostname</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>docker</span>.<span class='ident'>get_info</span>() {
         <span class='prelude-val'>Ok</span>(<span class='ident'>info</span>) <span class='op'>=&gt;</span> <span class='ident'>info</span>.<span class='ident'>Name</span>,
         <span class='prelude-val'>Err</span>(<span class='ident'>e</span>) <span class='op'>=&gt;</span> {
