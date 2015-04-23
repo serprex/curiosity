@@ -1,5 +1,6 @@
 [package]
 name = "curiosity"
+description = "Curiosity is a monitoring container."
 version = "0.0.1"
 authors = ["Graham Lee <ghmlee@cosmos.io>"]
 license = "Apache-2.0"
