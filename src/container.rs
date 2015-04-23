@@ -2,7 +2,15 @@ use std::io::{Result, Error, ErrorKind};
 use docker;
 
 pub fn get_containers() -> Result<Vec<docker::container::Container>> {
-    let docker = docker::Docker::new();
+    let docker = match docker::Docker::connect("unix:///var/run/docker.sock") {
+        Ok(docker) => docker,
+        Err(e) => {
+            println!("{}", e);
+            let err = Error::new(ErrorKind::NotConnected,
+                                 "The connection is not connected.");
+            return Err(err);
+        }
+    };
     let containers = match docker.get_containers(true) {
         Ok(containers) => containers,
         Err(e) => {
@@ -16,12 +24,20 @@ pub fn get_containers() -> Result<Vec<docker::container::Container>> {
 }
 
 pub fn get_stats_as_cosmos_container(container: &docker::container::Container) -> Result<Container> {
-    let docker = docker::Docker::new();
+    let docker = match docker::Docker::connect("unix:///var/run/docker.sock") {
+        Ok(docker) => docker,
+        Err(e) => {
+            println!("{}", e);
+            let err = Error::new(ErrorKind::NotConnected,
+                                 "The connection is not connected.");
+            return Err(err);
+        }
+    };
     let stats = match docker.get_stats(container) {
         Ok(stats) => stats,
         Err(e) => {
             println!("{}", e);
-            let err = Error::new(ErrorKind::ConnectionAborted,
+            let err = Error::new(ErrorKind::NotConnected,
                                  "A connection is aborted.");
             return Err(err);
         }
@@ -43,8 +59,15 @@ pub fn get_stats_as_cosmos_container(container: &docker::container::Container) -
 }
 
 pub fn get_hostname() -> Result<String> {
-    let docker = docker::Docker::new();
-
+    let docker = match docker::Docker::connect("unix:///var/run/docker.sock") {
+        Ok(docker) => docker,
+        Err(e) => {
+            println!("{}", e);
+            let err = Error::new(ErrorKind::NotConnected,
+                                 "The connection is not connected.");
+            return Err(err);
+        }
+    };
     let hostname = match docker.get_info() {
         Ok(info) => info.Name,
         Err(e) => {
