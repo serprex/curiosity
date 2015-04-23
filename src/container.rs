@@ -2,7 +2,7 @@ use std::io::{Result, Error, ErrorKind};
 use docker;
 
 fn get_docker() -> Result<docker::Docker> {
-    let mut docker = match docker::Docker::connect("unix:///var/run/docker.sock") {
+    let docker = match docker::Docker::connect("unix:///var/run/docker.sock") {
         Ok(docker) => docker,
         Err(e) => {
             println!("{}", e);
