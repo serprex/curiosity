@@ -1,8 +1,20 @@
+use std::env;
 use std::io::{Result, Error, ErrorKind};
+use std::path::Path;
 use docker;
 
 fn get_docker() -> Result<docker::Docker> {
-    let mut docker = match docker::Docker::connect("unix:///var/run/docker.sock") {
+    let docker_host = match env::var("DOCKER_HOST") {
+        Ok(host) => host,
+        Err(_) => "unix:///var/run/docker.sock".to_string()
+    };
+
+    let docker_cert_path = match env::var("DOCKER_CERT_PATH") {
+        Ok(host) => host,
+        Err(_) => "".to_string()
+    };
+    
+    let mut docker = match docker::Docker::connect(&docker_host) {
         Ok(docker) => docker,
         Err(e) => {
             println!("{}", e);
@@ -11,6 +23,17 @@ fn get_docker() -> Result<docker::Docker> {
             return Err(err);
         }
     };
+
+    if docker_cert_path != "" {
+        let key = Path::new(&docker_cert_path).join("key.pem");
+        let cert = Path::new(&docker_cert_path).join("cert.pem");
+        let ca = Path::new(&docker_cert_path).join("ca.pem");
+        docker.set_tls(true);
+        docker.set_private_key_file(&key).unwrap();
+        docker.set_certificate_file(&cert).unwrap();
+        docker.set_ca_file(&ca).unwrap();
+    }
+    
     return Ok(docker);
 }
 
