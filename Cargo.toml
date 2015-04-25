@@ -6,7 +6,7 @@ authors = ["Graham Lee <ghmlee@cosmos.io>"]
 license = "Apache-2.0"
 homepage = "https://github.com/cosmos-io/curiosity"
 repository = "https://github.com/cosmos-io/curiosity.git"
-documentation = "https://cosmos-io.github.com/curiosity/doc/curiosity"
+documentation = "https://cosmos-io.github.io/curiosity/doc/curiosity"
 readme = "README.md"
 keywords = ["cosmos"]
 

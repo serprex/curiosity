@@ -18,6 +18,8 @@ $ docker run -d -v /var/run/docker.sock:/var/run/docker.sock -e COSMOS_HOST=cosm
 
 ## Debug
 
+Documentation is available [here](https://cosmos-io.github.io/curiosity/doc/curiosity).
+
 ### Rust
 
 It is built with [Rust](http://www.rust-lang.org) that runs blazing fast, prevents almost all crashes, and eliminates data races. It is recommend to use [a Rust container](https://registry.hub.docker.com/u/cosmosio/curiosity/) when you debug. Of course, you can directly install Rust on your machine. If you do, please follow [the instruction](http://www.rust-lang.org/install.html).
