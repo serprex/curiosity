@@ -4,8 +4,7 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use time;
 use cosmos::Cosmos;
-use container;
-use container::Container;
+use container::{self, Container};
 use rustc_serialize::json;
 
 pub struct Curiosity;
@@ -15,15 +14,19 @@ impl Curiosity {
         return Curiosity;
     }
 
-    pub fn run(&self, host: &str, planet_name: &str, interval: u64) {
+    pub fn run(&self, host: &str, interval: u64) {
         let host = host.to_string();
-        let planet_name = planet_name.to_string();
+        let planet_name = match container::get_hostname() {
+            Ok(hostname) => hostname,
+            Err(_) => "unnamed".to_string()
+        };
         
         let mut timestamp = time::precise_time_s() as u64;
         let mut map: HashMap<String, Container> = HashMap::new();
 
         let (container_tx, container_rx) = mpsc::channel();
         let (cosmos_tx, cosmos_rx) = mpsc::channel();
+        
         thread::spawn(move|| { Curiosity::get_containers(&container_tx); });
         thread::spawn(move|| { Curiosity::post_containers(&cosmos_rx, &host, &planet_name); });
 
@@ -83,6 +86,7 @@ impl Curiosity {
 
                 let container = container.clone();
                 let stats_tx = stats_tx.clone();
+                
                 thread::spawn(move|| {
                     let result = container::get_stats_as_cosmos_container(&container);
                     match stats_tx.send(result) {

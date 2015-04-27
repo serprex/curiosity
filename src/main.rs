@@ -14,24 +14,16 @@ use curiosity::Curiosity;
 fn main() {
     let host = match env::var("COSMOS_HOST") {
         Ok(host) => host,
-        Err(_) => { panic!("COSMOS_HOST envrionment variable does not exist.") }
-    };
-
-    let planet_name = match env::var("COSMOS_PLANET_NAME") {
-        Ok(planet_name) => planet_name,
         Err(_) => {
-            let planet_name = match container::get_hostname() {
-                Ok(planet_name) => planet_name,
-                Err(e) => { panic!("{}", e); }
-            };
-            planet_name
+            println!("COSMOS_HOST envrionment variable does not exist.");
+            "127.0.0.1:8888".to_string()
         }
     };
 
     let interval: u64 = 10;
 
     let curiosity = Curiosity::new();
-    curiosity.run(&host, &planet_name, interval);
+    curiosity.run(&host, interval);
 }
 
 #[test]
