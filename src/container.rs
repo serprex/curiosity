@@ -1,5 +1,6 @@
 use std::env;
-use std::io::{Result, Error, ErrorKind};
+use std::io::{self, Result, ErrorKind};
+use std::error::Error;
 use std::path::Path;
 use docker;
 
@@ -13,12 +14,11 @@ fn get_docker() -> Result<docker::Docker> {
         Ok(host) => host,
         Err(_) => "".to_string()
     };
-    
+
     let mut docker = match docker::Docker::connect(&docker_host) {
         Ok(docker) => docker,
-        Err(e) => {
-            println!("{}", e);
-            let err = Error::new(ErrorKind::NotConnected,
+        Err(_) => {
+            let err = io::Error::new(ErrorKind::NotConnected,
                                  "The connection is not connected.");
             return Err(err);
         }
@@ -28,12 +28,16 @@ fn get_docker() -> Result<docker::Docker> {
         let key = Path::new(&docker_cert_path).join("key.pem");
         let cert = Path::new(&docker_cert_path).join("cert.pem");
         let ca = Path::new(&docker_cert_path).join("ca.pem");
-        docker.set_tls(true);
-        docker.set_private_key_file(&key).unwrap();
-        docker.set_certificate_file(&cert).unwrap();
-        docker.set_ca_file(&ca).unwrap();
+        match docker.set_tls(&key, &cert, &ca) {
+            Ok(_) => {},
+            Err(e) => {
+                let err = io::Error::new(ErrorKind::NotConnected,
+                                         "The connection is not connected.");
+                return Err(err);
+            }
+        }
     }
-    
+
     return Ok(docker);
 }
 
@@ -41,10 +45,9 @@ pub fn get_containers() -> Result<Vec<docker::container::Container>> {
     let docker = try!(get_docker());
     let containers = match docker.get_containers(true) {
         Ok(containers) => containers,
-        Err(e) => {
-            println!("{}", e);
-            let err = Error::new(ErrorKind::ConnectionAborted,
-                                 "A connection is aborted");
+        Err(_) => {
+            let err = io::Error::new(ErrorKind::ConnectionAborted,
+                                 "The connection is not connected.");
             return Err(err);
         }
     };
@@ -55,24 +58,20 @@ pub fn get_stats_as_cosmos_container(container: &docker::container::Container) -
     let docker = try!(get_docker());
     let stats = match docker.get_stats(container) {
         Ok(stats) => stats,
-        Err(e) => {
-            println!("{}", e);
-            let err = Error::new(ErrorKind::NotConnected,
-                                 "A connection is aborted.");
+        Err(_) => {
+            let err = io::Error::new(ErrorKind::NotConnected,
+                                 "The connection is not connected.");
             return Err(err);
         }
     };
-
     let delayed_stats = match docker.get_stats(container) {
         Ok(stats) => stats,
-        Err(e) => {
-            println!("{}", e);
-            let err = Error::new(ErrorKind::ConnectionAborted,
-                                 "A connection is aborted.");
+        Err(_) => {
+            let err = io::Error::new(ErrorKind::ConnectionAborted,
+                                 "The connection is not connected.");
             return Err(err);
         }
     };
-
     let cosmos_container = container.to_cosmos_container(&stats, &delayed_stats);
     return Ok(cosmos_container);
 }
@@ -81,14 +80,12 @@ pub fn get_hostname() -> Result<String> {
     let docker = try!(get_docker());
     let hostname = match docker.get_info() {
         Ok(info) => info.Name,
-        Err(e) => {
-            println!("{}", e);
-            let err = Error::new(ErrorKind::NotConnected,
-                                 "A connection to Docker is aborted.");
+        Err(_) => {
+            let err = io::Error::new(ErrorKind::NotConnected,
+                                     "The connection is not connected.");
             return Err(err);
         }
     };
-
     return Ok(hostname);
 }
 
