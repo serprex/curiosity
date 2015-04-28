@@ -1,4 +1,5 @@
 use std::thread;
+use std::sync::Arc;
 use std::sync::mpsc::{self, Sender, Receiver};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
@@ -6,6 +7,7 @@ use time;
 use cosmos::Cosmos;
 use container::{self, Container};
 use rustc_serialize::json;
+use docker;
 
 pub struct Curiosity;
 
@@ -26,8 +28,15 @@ impl Curiosity {
 
         let (container_tx, container_rx) = mpsc::channel();
         let (cosmos_tx, cosmos_rx) = mpsc::channel();
+        let docker = Arc::new(match container::get_docker() {
+            Ok(docker) => docker,
+            Err(_) => {
+                println!("It could not find a docker host.");
+                return;
+            }
+        });
         
-        thread::spawn(move|| { Curiosity::get_containers(&container_tx); });
+        thread::spawn(move|| { Curiosity::get_containers(&docker.clone(), &container_tx); });
         thread::spawn(move|| { Curiosity::post_containers(&cosmos_rx, &host, &planet_name); });
 
         loop {
@@ -71,10 +80,12 @@ impl Curiosity {
         }
     }
     
-    fn get_containers(tx: &Sender<Vec<Container>>) {
+    fn get_containers(docker: &Arc<docker::Docker>, tx: &Sender<Vec<Container>>) {
         let tx = tx.clone();
+        
         loop {
-            let containers = match container::get_containers() {
+            let docker = docker.clone();
+            let containers = match container::get_containers(&*docker) {
                 Ok(containers) => containers,
                 Err(e) => { println!("{}", e); continue; }
             };
@@ -86,9 +97,10 @@ impl Curiosity {
 
                 let container = container.clone();
                 let stats_tx = stats_tx.clone();
+                let docker = docker.clone();
                 
                 thread::spawn(move|| {
-                    let result = container::get_stats_as_cosmos_container(&container);
+                    let result = container::get_stats_as_cosmos_container(&*docker, &container);
                     match stats_tx.send(result) {
                         Ok(_) => {}
                         Err(e) => { println!("{}", e); return; }
@@ -130,7 +142,7 @@ impl Curiosity {
             let cosmos = Cosmos::new(host);
             let res = match cosmos.post_containers(planet_name, &containers) {
                 Ok(res) => res,
-                Err(e) => { println!("{}", e); continue; }
+                Err(_) => { println!("The server didn't respond any response."); continue; }
             };
 
             if res.status_code / 100 == 2 { continue; }

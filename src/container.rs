@@ -4,7 +4,7 @@ use std::error::Error;
 use std::path::Path;
 use docker;
 
-fn get_docker() -> Result<docker::Docker> {
+pub fn get_docker() -> Result<docker::Docker> {
     let docker_host = match env::var("DOCKER_HOST") {
         Ok(host) => host,
         Err(_) => "unix:///var/run/docker.sock".to_string()
@@ -30,7 +30,7 @@ fn get_docker() -> Result<docker::Docker> {
         let ca = Path::new(&docker_cert_path).join("ca.pem");
         match docker.set_tls(&key, &cert, &ca) {
             Ok(_) => {},
-            Err(e) => {
+            Err(_) => {
                 let err = io::Error::new(ErrorKind::NotConnected,
                                          "The connection is not connected.");
                 return Err(err);
@@ -41,8 +41,7 @@ fn get_docker() -> Result<docker::Docker> {
     return Ok(docker);
 }
 
-pub fn get_containers() -> Result<Vec<docker::container::Container>> {
-    let docker = try!(get_docker());
+pub fn get_containers(docker: &docker::Docker) -> Result<Vec<docker::container::Container>> {
     let containers = match docker.get_containers(true) {
         Ok(containers) => containers,
         Err(_) => {
@@ -54,8 +53,7 @@ pub fn get_containers() -> Result<Vec<docker::container::Container>> {
     return Ok(containers);
 }
 
-pub fn get_stats_as_cosmos_container(container: &docker::container::Container) -> Result<Container> {
-    let docker = try!(get_docker());
+pub fn get_stats_as_cosmos_container(docker: &docker::Docker, container: &docker::container::Container) -> Result<Container> {
     let stats = match docker.get_stats(container) {
         Ok(stats) => stats,
         Err(_) => {
