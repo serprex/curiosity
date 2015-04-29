@@ -11,7 +11,7 @@ readme = "README.md"
 keywords = ["cosmos"]
 
 [dependencies]
-docker = "0.0.30"
+docker = "0.0.32"
 cosmos = "0.0.14"
-rustc-serialize = "0.3.13"
+rustc-serialize = "0.3.14"
 time = "0.1.25"
