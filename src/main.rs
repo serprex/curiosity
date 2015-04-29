@@ -7,6 +7,7 @@ extern crate time;
 
 mod curiosity;
 mod container;
+mod volume;
 
 use std::env;
 use curiosity::Curiosity;

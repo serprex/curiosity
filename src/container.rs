@@ -76,8 +76,8 @@ pub fn get_stats_as_cosmos_container(docker: &docker::Docker, container: &docker
 
 pub fn get_hostname() -> Result<String> {
     let docker = try!(get_docker());
-    let hostname = match docker.get_info() {
-        Ok(info) => info.Name,
+    let hostname = match docker.get_system_info() {
+        Ok(system_info) => system_info.Name,
         Err(_) => {
             let err = io::Error::new(ErrorKind::NotConnected,
                                      "The connection is not connected.");
