@@ -1,8 +1,8 @@
 use std::env;
 use std::io::{self, Result, ErrorKind};
-use std::error::Error;
 use std::path::Path;
 use docker;
+use cosmos;
 
 pub fn get_docker() -> Result<docker::Docker> {
     let docker_host = match env::var("DOCKER_HOST") {
@@ -53,7 +53,7 @@ pub fn get_containers(docker: &docker::Docker) -> Result<Vec<docker::container::
     return Ok(containers);
 }
 
-pub fn get_stats_as_cosmos_container(docker: &docker::Docker, container: &docker::container::Container) -> Result<Container> {
+pub fn get_stats_as_cosmos_container(docker: &docker::Docker, container: &docker::container::Container) -> Result<cosmos::Container> {
     let stats = match docker.get_stats(container) {
         Ok(stats) => stats,
         Err(_) => {
@@ -90,27 +90,13 @@ pub fn get_hostname() -> Result<String> {
 trait CosmosContainerDecodable {
     fn to_cosmos_container(&self,
                            stats: &docker::stats::Stats,
-                           delayed_stats: &docker::stats::Stats) -> Container;
+                           delayed_stats: &docker::stats::Stats) -> cosmos::Container;
 }
 
 impl CosmosContainerDecodable for docker::container::Container {
     fn to_cosmos_container(&self,
                            stats: &docker::stats::Stats,
-                           delayed_stats: &docker::stats::Stats) -> Container {
-        // network
-        let network = Network {
-            RxBytes: delayed_stats.network.rx_bytes,
-            TxBytes: delayed_stats.network.tx_bytes,
-            RxBytesDelta: delayed_stats.network.rx_bytes - stats.network.rx_bytes,
-            TxBytesDelta: delayed_stats.network.tx_bytes - stats.network.tx_bytes
-        };
-
-        // memory
-        let memory = Memory {
-            Limit: delayed_stats.memory_stats.limit,
-            Usage: delayed_stats.memory_stats.usage
-        };
-
+                           delayed_stats: &docker::stats::Stats) -> cosmos::Container {
         // cpu
         let cpus = stats.cpu_stats.cpu_usage.percpu_usage.len();
 
@@ -124,7 +110,7 @@ impl CosmosContainerDecodable for docker::container::Container {
                                             delayed_system_usage,
                                             cpus);
 
-        let mut percpus: Vec<f64> = Vec::new();
+        /*let mut percpus: Vec<f64> = Vec::new();
         for i in 0..cpus {
             let val = stats.cpu_stats.cpu_usage.percpu_usage[i];
             let delayed_val = delayed_stats.cpu_stats.cpu_usage.percpu_usage[i];
@@ -134,51 +120,14 @@ impl CosmosContainerDecodable for docker::container::Container {
                                           delayed_system_usage,
                                           cpus);
             percpus.push(percent);
-        }
+        }*/
 
-        let cpu = Cpu {
-            TotalUtilization: total_percent,
-            PerCpuUtilization: percpus
-        };
+        let name: Vec<&str> = self.Names[0].split("/").collect();
 
-        // stats
-        let stats = Stats {
-            Network: network,
-            Cpu: cpu,
-            Memory: memory
-        };
-
-        // names
-        let mut names: Vec<String> = Vec::new();
-        for name in self.Names.iter() {
-            let is_contained = name.as_bytes()[0] == "/".as_bytes()[0];
-            match is_contained {
-                true => {
-                    let mut index = 0;
-                    let mut new_name: Vec<u8> = Vec::new();
-                    for b in name.as_bytes() {
-                        index += 1;
-                        if index == 1 { continue; }
-                        new_name.push(*b);
-                    }
-                    names.push(String::from_utf8(new_name).unwrap());
-                }
-                false => { names.push(name.clone()); }
-            };
-        }
-
-        // container
-        let container = Container {
-            Id: self.Id.clone(),
-            Image: self.Image.clone(),
-            Status: self.Status.clone(),
-            Command: self.Command.clone(),
-            Created: self.Created.clone(),
-            Names: names,
-            Ports: self.Ports.clone(),
-            Stats: stats,
-            SizeRw: self.SizeRw,
-            SizeRootFs: self.SizeRootFs
+        let container = cosmos::Container {
+            Container: name[name.len() - 1].to_string(),
+            Cpu: total_percent as f32,
+            Memory: delayed_stats.memory_stats.usage
         };
 
         return container;
@@ -195,111 +144,4 @@ fn get_cpu_percent(cpu_val: u64,
     let mut percent = (cpu_val_delta / system_val_delta) * cpus as f64 * 100.0 as f64;
     if percent <= 0.0 { percent = 0.0; }
     return percent;
-}
-
-#[derive(RustcEncodable, RustcDecodable)]
-#[allow(non_snake_case)]
-pub struct Container {
-    pub Id: String,
-    pub Image: String,
-    pub Status: String,
-    pub Command: String,
-    pub Created: u64,
-    pub Names: Vec<String>,
-    pub Ports: Vec<docker::container::Port>,
-    pub Stats: Stats,
-    pub SizeRw: u64,
-    pub SizeRootFs: u64
-}
-
-#[derive(RustcEncodable, RustcDecodable)]
-#[allow(non_snake_case)]
-pub struct Stats {
-    pub Network: Network,
-    pub Cpu: Cpu,
-    pub Memory: Memory
-}
-
-#[derive(RustcEncodable, RustcDecodable)]
-#[allow(non_snake_case)]
-pub struct Network {
-    pub RxBytes: u64,
-    pub TxBytes: u64,
-    pub RxBytesDelta: u64,
-    pub TxBytesDelta: u64
-}
-
-#[derive(RustcEncodable, RustcDecodable)]
-#[allow(non_snake_case)]
-pub struct Cpu {
-    pub TotalUtilization: f64,
-    pub PerCpuUtilization: Vec<f64>
-}
-
-#[derive(RustcEncodable, RustcDecodable)]
-#[allow(non_snake_case)]
-pub struct Memory {
-    pub Limit: u64,
-    pub Usage: u64
-}
-
-impl Clone for Container {
-    fn clone(&self) -> Self {
-        let container = Container {
-            Id: self.Id.clone(),
-            Image: self.Image.clone(),
-            Status: self.Status.clone(),
-            Command: self.Command.clone(),
-            Created: self.Created,
-            Names: self.Names.clone(),
-            Ports: self.Ports.clone(),
-            Stats: self.Stats.clone(),
-            SizeRw: self.SizeRw,
-            SizeRootFs: self.SizeRootFs
-        };
-        return container;
-    }
-}
-
-impl Clone for Stats {
-    fn clone(&self) -> Self {
-        let stats = Stats {
-            Network: self.Network.clone(),
-            Cpu: self.Cpu.clone(),
-            Memory: self.Memory.clone()
-        };
-        return stats;
-    }
-}
-
-impl Clone for Network {
-    fn clone(&self) -> Self {
-        let network = Network {
-            RxBytes: self.RxBytes,
-            TxBytes: self.TxBytes,
-            RxBytesDelta: self.RxBytesDelta,
-            TxBytesDelta: self.TxBytesDelta
-        };
-        return network;
-    }
-}
-
-impl Clone for Cpu {
-    fn clone(&self) -> Self {
-        let cpu = Cpu {
-            TotalUtilization: self.TotalUtilization,
-            PerCpuUtilization: self.PerCpuUtilization.clone()
-        };
-        return cpu;
-    }
-}
-
-impl Clone for Memory {
-    fn clone(&self) -> Self {
-        let memory = Memory {
-            Limit: self.Limit,
-            Usage: self.Usage,
-        };
-        return memory;
-    }
 }
