@@ -3,11 +3,10 @@ use std::sync::Arc;
 use std::sync::mpsc::{self, Sender, Receiver};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
-use time;
-use cosmos::Cosmos;
-use container::{self, Container};
-use rustc_serialize::json;
+use cosmos::{self, Cosmos};
 use docker;
+use container;
+use time;
 
 pub struct Curiosity;
 
@@ -18,13 +17,13 @@ impl Curiosity {
 
     pub fn run(&self, host: &str, interval: u64) {
         let host = host.to_string();
-        let planet_name = match container::get_hostname() {
+        let planet = match container::get_hostname() {
             Ok(hostname) => hostname,
             Err(_) => "unnamed".to_string()
         };
         
         let mut timestamp = time::precise_time_s() as u64;
-        let mut map: HashMap<String, Container> = HashMap::new();
+        let mut map: HashMap<String, cosmos::Container> = HashMap::new();
 
         let (container_tx, container_rx) = mpsc::channel();
         let (cosmos_tx, cosmos_rx) = mpsc::channel();
@@ -37,7 +36,7 @@ impl Curiosity {
         });
         
         thread::spawn(move|| { Curiosity::get_containers(&docker.clone(), &container_tx); });
-        thread::spawn(move|| { Curiosity::post_containers(&cosmos_rx, &host, &planet_name); });
+        thread::spawn(move|| { Curiosity::post_metrics(&cosmos_rx, &host, &planet); });
 
         loop {
             let containers = match container_rx.try_recv() {
@@ -46,15 +45,15 @@ impl Curiosity {
             };
 
             for container in containers.iter() {
-                let value = match map.entry(container.Id.clone()) {
+                let value = match map.entry(container.Container.clone()) {
                     Occupied(mut entry) => { entry.get_mut().clone() }
                     Vacant(entry) => { entry.insert(container.clone()); continue; }
                 };
-                let max = value.Stats.Cpu.TotalUtilization;
-                let current = container.Stats.Cpu.TotalUtilization;
+                let max = value.Cpu;
+                let current = container.Cpu;
                 if current - max > 0.0 {
-                    map.remove(&container.Id);
-                    map.insert(container.Id.clone(), container.clone());
+                    map.remove(&container.Container);
+                    map.insert(container.Container.clone(), container.clone());
                 }
             }
 
@@ -63,15 +62,10 @@ impl Curiosity {
             if diff < interval { continue; }
             timestamp = now;
 
-            let mut cosmos_containers: Vec<Container> = Vec::new();
+            let mut cosmos_containers: Vec<cosmos::Container> = Vec::new();
             for x in map.values() { cosmos_containers.push(x.clone()); }
 
-            let body = match json::encode(&cosmos_containers) {
-                Ok(encoded) => encoded,
-                Err(e) => { println!("{}", e); continue; }
-            };
-
-            match cosmos_tx.send(body) {
+            match cosmos_tx.send(cosmos_containers) {
                 Ok(_) => {}
                 Err(e) => { println!("{}", e); continue; }
             }
@@ -80,7 +74,7 @@ impl Curiosity {
         }
     }
     
-    fn get_containers(docker: &Arc<docker::Docker>, tx: &Sender<Vec<Container>>) {
+    fn get_containers(docker: &Arc<docker::Docker>, tx: &Sender<Vec<cosmos::Container>>) {
         let tx = tx.clone();
         
         loop {
@@ -109,7 +103,7 @@ impl Curiosity {
                 index += 1;
             }
 
-            let mut cosmos_containers: Vec<Container> = Vec::new();
+            let mut cosmos_containers: Vec<cosmos::Container> = Vec::new();
             for _ in 0..index {
                 let result = match stats_rx.recv() {
                     Ok(result) => result,
@@ -131,7 +125,7 @@ impl Curiosity {
         }
     }
 
-    fn post_containers(rx: &Receiver<String>, host: &str, planet_name: &str) {
+    fn post_metrics(rx: &Receiver<Vec<cosmos::Container>>, host: &str, planet: &str) {
         let rx = rx.clone();
         loop {
             let containers = match rx.recv() {
@@ -139,8 +133,8 @@ impl Curiosity {
                 Err(_) => { continue; }
             };
 
-            let cosmos = Cosmos::new(host);
-            let res = match cosmos.post_containers(planet_name, &containers) {
+            let cosmos = Cosmos::new(host, planet);
+            let res = match cosmos.post_metrics(&containers) {
                 Ok(res) => res,
                 Err(_) => { println!("The server didn't respond any response."); continue; }
             };

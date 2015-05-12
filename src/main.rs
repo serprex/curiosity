@@ -2,7 +2,6 @@
 #![doc(html_root_url="https://cosmos-io.github.io/curiosity/doc")]
 extern crate docker;
 extern crate cosmos;
-extern crate rustc_serialize;
 extern crate time;
 
 mod curiosity;
