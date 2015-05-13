@@ -19,7 +19,7 @@ pub fn get_docker() -> Result<docker::Docker> {
         Ok(docker) => docker,
         Err(_) => {
             let err = io::Error::new(ErrorKind::NotConnected,
-                                 "The connection is not connected.");
+                                 "The connection is not connected with DOCKER_HOST.");
             return Err(err);
         }
     };
@@ -32,7 +32,7 @@ pub fn get_docker() -> Result<docker::Docker> {
             Ok(_) => {},
             Err(_) => {
                 let err = io::Error::new(ErrorKind::NotConnected,
-                                         "The connection is not connected.");
+                                         "The connection is not connected with DOCKER_CERT_PATH.");
                 return Err(err);
             }
         }
@@ -46,7 +46,7 @@ pub fn get_containers(docker: &docker::Docker) -> Result<Vec<docker::container::
         Ok(containers) => containers,
         Err(_) => {
             let err = io::Error::new(ErrorKind::ConnectionAborted,
-                                 "The connection is not connected.");
+                                 "Can not get containers.");
             return Err(err);
         }
     };
@@ -58,7 +58,7 @@ pub fn get_stats_as_cosmos_container(docker: &docker::Docker, container: &docker
         Ok(stats) => stats,
         Err(_) => {
             let err = io::Error::new(ErrorKind::NotConnected,
-                                 "The connection is not connected.");
+                                 "Can not get stats of container.");
             return Err(err);
         }
     };
@@ -66,7 +66,7 @@ pub fn get_stats_as_cosmos_container(docker: &docker::Docker, container: &docker
         Ok(stats) => stats,
         Err(_) => {
             let err = io::Error::new(ErrorKind::ConnectionAborted,
-                                 "The connection is not connected.");
+                                 "Can not get stats of container.");
             return Err(err);
         }
     };
@@ -80,7 +80,7 @@ pub fn get_hostname() -> Result<String> {
         Ok(system_info) => system_info.Name,
         Err(_) => {
             let err = io::Error::new(ErrorKind::NotConnected,
-                                     "The connection is not connected.");
+                                     "Can not get hostname of docker system info.");
             return Err(err);
         }
     };
