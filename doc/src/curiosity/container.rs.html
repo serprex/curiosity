@@ -209,7 +209,7 @@
         <span class='prelude-val'>Ok</span>(<span class='ident'>docker</span>) <span class='op'>=&gt;</span> <span class='ident'>docker</span>,
         <span class='prelude-val'>Err</span>(_) <span class='op'>=&gt;</span> {
             <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>NotConnected</span>,
-                                 <span class='string'>&quot;The connection is not connected.&quot;</span>);
+                                 <span class='string'>&quot;The connection is not connected with DOCKER_HOST.&quot;</span>);
             <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
         }
     };
@@ -222,7 +222,7 @@
             <span class='prelude-val'>Ok</span>(_) <span class='op'>=&gt;</span> {},
             <span class='prelude-val'>Err</span>(_) <span class='op'>=&gt;</span> {
                 <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>NotConnected</span>,
-                                         <span class='string'>&quot;The connection is not connected.&quot;</span>);
+                                         <span class='string'>&quot;The connection is not connected with DOCKER_CERT_PATH.&quot;</span>);
                 <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
             }
         }
@@ -236,7 +236,7 @@
         <span class='prelude-val'>Ok</span>(<span class='ident'>containers</span>) <span class='op'>=&gt;</span> <span class='ident'>containers</span>,
         <span class='prelude-val'>Err</span>(_) <span class='op'>=&gt;</span> {
             <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>ConnectionAborted</span>,
-                                 <span class='string'>&quot;The connection is not connected.&quot;</span>);
+                                 <span class='string'>&quot;Can not get containers.&quot;</span>);
             <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
         }
     };
@@ -248,7 +248,7 @@
         <span class='prelude-val'>Ok</span>(<span class='ident'>stats</span>) <span class='op'>=&gt;</span> <span class='ident'>stats</span>,
         <span class='prelude-val'>Err</span>(_) <span class='op'>=&gt;</span> {
             <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>NotConnected</span>,
-                                 <span class='string'>&quot;The connection is not connected.&quot;</span>);
+                                 <span class='string'>&quot;Can not get stats of container.&quot;</span>);
             <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
         }
     };
@@ -256,7 +256,7 @@
         <span class='prelude-val'>Ok</span>(<span class='ident'>stats</span>) <span class='op'>=&gt;</span> <span class='ident'>stats</span>,
         <span class='prelude-val'>Err</span>(_) <span class='op'>=&gt;</span> {
             <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>ConnectionAborted</span>,
-                                 <span class='string'>&quot;The connection is not connected.&quot;</span>);
+                                 <span class='string'>&quot;Can not get stats of container.&quot;</span>);
             <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
         }
     };
@@ -270,7 +270,7 @@
         <span class='prelude-val'>Ok</span>(<span class='ident'>system_info</span>) <span class='op'>=&gt;</span> <span class='ident'>system_info</span>.<span class='ident'>Name</span>,
         <span class='prelude-val'>Err</span>(_) <span class='op'>=&gt;</span> {
             <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>NotConnected</span>,
-                                     <span class='string'>&quot;The connection is not connected.&quot;</span>);
+                                     <span class='string'>&quot;Can not get hostname of docker system info.&quot;</span>);
             <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
         }
     };
@@ -368,10 +368,6 @@
                 <code>struct</code>, <code>enum</code>,
                 <code>trait</code>, <code>typedef</code> (or
                 <code>tdef</code>).
-            </p>
-            <p>
-                Search functions by type signature (e.g.
-                <code>vec -> usize</code>)
             </p>
         </div>
     </div>
