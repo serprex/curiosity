@@ -42,7 +42,7 @@ pub fn get_docker() -> Result<docker::Docker> {
 }
 
 pub fn get_containers(docker: &docker::Docker) -> Result<Vec<docker::container::Container>> {
-    let containers = match docker.get_containers(true) {
+    let containers = match docker.get_containers(false) {
         Ok(containers) => containers,
         Err(_) => {
             let err = io::Error::new(ErrorKind::ConnectionAborted,
