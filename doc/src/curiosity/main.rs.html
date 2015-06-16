@@ -72,6 +72,7 @@
 <span id="30">30</span>
 <span id="31">31</span>
 <span id="32">32</span>
+<span id="33">33</span>
 </pre><pre class='rust '>
 <span class='doccomment'>//! Curiosity</span>
 <span class='attribute'>#<span class='op'>!</span>[<span class='ident'>doc</span>(<span class='ident'>html_root_url</span><span class='op'>=</span><span class='string'>&quot;https://cosmos-io.github.io/curiosity/doc&quot;</span>)]</span>
@@ -91,6 +92,7 @@
         <span class='prelude-val'>Ok</span>(<span class='ident'>host</span>) <span class='op'>=&gt;</span> <span class='ident'>host</span>,
         <span class='prelude-val'>Err</span>(_) <span class='op'>=&gt;</span> {
             <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;COSMOS_HOST envrionment variable does not exist.&quot;</span>);
+            <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;127.0.0.1:8888 is used for the cosmos.&quot;</span>);
             <span class='string'>&quot;127.0.0.1:8888&quot;</span>.<span class='ident'>to_string</span>()
         }
     };
