@@ -74,8 +74,7 @@ pub fn get_stats_as_cosmos_container(docker: &docker::Docker, container: &docker
     return Ok(cosmos_container);
 }
 
-pub fn get_hostname() -> Result<String> {
-    let docker = try!(get_docker());
+pub fn get_hostname(docker: &docker::Docker) -> Result<String> {
     let hostname = match docker.get_system_info() {
         Ok(system_info) => system_info.Name,
         Err(_) => {

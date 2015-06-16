@@ -16,6 +16,7 @@ fn main() {
         Ok(host) => host,
         Err(_) => {
             println!("COSMOS_HOST envrionment variable does not exist.");
+            println!("127.0.0.1:8888 is used for the cosmos.");
             "127.0.0.1:8888".to_string()
         }
     };
