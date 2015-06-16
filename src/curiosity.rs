@@ -16,24 +16,27 @@ impl Curiosity {
     }
 
     pub fn run(&self, host: &str, interval: u64) {
-        let host = host.to_string();
-        let planet = match container::get_hostname() {
-            Ok(hostname) => hostname,
-            Err(_) => "unnamed".to_string()
-        };
-        
-        let mut timestamp = time::precise_time_s() as u64;
-        let mut map: HashMap<String, cosmos::Container> = HashMap::new();
-
-        let (container_tx, container_rx) = mpsc::channel();
-        let (cosmos_tx, cosmos_rx) = mpsc::channel();
         let docker = Arc::new(match container::get_docker() {
             Ok(docker) => docker,
             Err(_) => {
-                println!("It could not find a docker host.");
+                println!("A Docker host was not found.");
                 return;
             }
         });
+
+        let host = host.to_string();
+        let planet = match container::get_hostname(&docker.clone()) {
+            Ok(hostname) => hostname,
+            Err(_) => "unnamed".to_string()
+        };
+
+        println!("{} is used for the planet.", planet);
+        
+        let mut timestamp = time::precise_time_s() as u64;
+        let mut map: HashMap<String, cosmos::Container> = HashMap::new();
+        
+        let (container_tx, container_rx) = mpsc::channel();
+        let (cosmos_tx, cosmos_rx) = mpsc::channel();
         
         thread::spawn(move|| { Curiosity::get_containers(&docker.clone(), &container_tx); });
         thread::spawn(move|| { Curiosity::post_metrics(&cosmos_rx, &host, &planet); });
@@ -136,12 +139,10 @@ impl Curiosity {
             let cosmos = Cosmos::new(host, planet);
             let res = match cosmos.post_metrics(&containers) {
                 Ok(res) => res,
-                Err(_) => { println!("The server didn't respond any response."); continue; }
+                Err(_) => { println!("Any response was not received."); continue; }
             };
 
-            if res.status_code / 100 == 2 { continue; }
-
-            println!("status code: {}\nbody: {}", res.status_code, res.body);
+            println!("{}\n{}", res.status_code, res.body);
         }
     }
 }
