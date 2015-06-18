@@ -55,9 +55,9 @@ impl Curiosity {
                     Occupied(mut entry) => { entry.get_mut().clone() }
                     Vacant(entry) => { entry.insert(container.clone()); continue; }
                 };
-                let max = saved_container.Cpu;
-                let current = container.Cpu;
-                if current - max > 0.0 {
+                let max_cpu = saved_container.Cpu;
+                let current_cpu = container.Cpu;
+                if current_cpu - max_cpu > 0.0 {
                     map.remove(&container.Container);
                     map.insert(container.Container.clone(), container.clone());
                 }
