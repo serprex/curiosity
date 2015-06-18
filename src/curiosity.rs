@@ -16,6 +16,7 @@ impl Curiosity {
     }
 
     pub fn run(&self, host: &str, interval: u64) {
+        // A single docker host
         let docker = Arc::new(match container::get_docker() {
             Ok(docker) => docker,
             Err(_) => {
@@ -24,6 +25,7 @@ impl Curiosity {
             }
         });
 
+        // host, planet name
         let host = host.to_string();
         let planet = match container::get_hostname(&docker.clone()) {
             Ok(hostname) => hostname,
@@ -31,13 +33,14 @@ impl Curiosity {
         };
 
         println!("{} is used for the planet.", planet);
-        
+
+        // timestamp, hash map for saved containers
         let mut timestamp = time::precise_time_s() as u64;
         let mut map: HashMap<String, cosmos::Container> = HashMap::new();
-        
+
+        // channels for docker, network
         let (container_tx, container_rx) = mpsc::channel();
         let (cosmos_tx, cosmos_rx) = mpsc::channel();
-        
         thread::spawn(move|| { Curiosity::get_containers(&docker.clone(), &container_tx); });
         thread::spawn(move|| { Curiosity::post_metrics(&cosmos_rx, &host, &planet); });
 
@@ -48,11 +51,11 @@ impl Curiosity {
             };
 
             for container in containers.iter() {
-                let value = match map.entry(container.Container.clone()) {
+                let saved_container = match map.entry(container.Container.clone()) {
                     Occupied(mut entry) => { entry.get_mut().clone() }
                     Vacant(entry) => { entry.insert(container.clone()); continue; }
                 };
-                let max = value.Cpu;
+                let max = saved_container.Cpu;
                 let current = container.Cpu;
                 if current - max > 0.0 {
                     map.remove(&container.Container);
