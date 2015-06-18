@@ -79,7 +79,7 @@ pub fn get_hostname(docker: &docker::Docker) -> Result<String> {
         Ok(system_info) => system_info.Name,
         Err(_) => {
             let err = io::Error::new(ErrorKind::NotConnected,
-                                     "Docker infomation could not be found.");
+                                     "Docker information could not be found.");
             return Err(err);
         }
     };
@@ -109,22 +109,13 @@ impl CosmosContainerDecodable for docker::container::Container {
                                             delayed_system_usage,
                                             cpus);
 
-        /*let mut percpus: Vec<f64> = Vec::new();
-        for i in 0..cpus {
-            let val = stats.cpu_stats.cpu_usage.percpu_usage[i];
-            let delayed_val = delayed_stats.cpu_stats.cpu_usage.percpu_usage[i];
-            let percent = get_cpu_percent(val,
-                                          delayed_val,
-                                          system_usage,
-                                          delayed_system_usage,
-                                          cpus);
-            percpus.push(percent);
-        }*/
-
+        // name
         let name: Vec<&str> = self.Names[0].split("/").collect();
+        let short_name = name[name.len() - 1].to_string();
 
+        // container struct
         let container = cosmos::Container {
-            Container: name[name.len() - 1].to_string(),
+            Container: short_name,
             Cpu: total_percent as f32,
             Memory: delayed_stats.memory_stats.usage
         };
