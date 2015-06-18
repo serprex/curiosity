@@ -177,15 +177,6 @@
 <span id="135">135</span>
 <span id="136">136</span>
 <span id="137">137</span>
-<span id="138">138</span>
-<span id="139">139</span>
-<span id="140">140</span>
-<span id="141">141</span>
-<span id="142">142</span>
-<span id="143">143</span>
-<span id="144">144</span>
-<span id="145">145</span>
-<span id="146">146</span>
 </pre><pre class='rust '>
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>env</span>;
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>::{<span class='self'>self</span>, <span class='prelude-ty'>Result</span>, <span class='ident'>ErrorKind</span>};
@@ -268,7 +259,7 @@
         <span class='prelude-val'>Ok</span>(<span class='ident'>system_info</span>) <span class='op'>=&gt;</span> <span class='ident'>system_info</span>.<span class='ident'>Name</span>,
         <span class='prelude-val'>Err</span>(_) <span class='op'>=&gt;</span> {
             <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>NotConnected</span>,
-                                     <span class='string'>&quot;Docker infomation could not be found.&quot;</span>);
+                                     <span class='string'>&quot;Docker information could not be found.&quot;</span>);
             <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
         }
     };
@@ -298,22 +289,13 @@
                                             <span class='ident'>delayed_system_usage</span>,
                                             <span class='ident'>cpus</span>);
 
-        <span class='comment'>/*let mut percpus: Vec&lt;f64&gt; = Vec::new();
-        for i in 0..cpus {
-            let val = stats.cpu_stats.cpu_usage.percpu_usage[i];
-            let delayed_val = delayed_stats.cpu_stats.cpu_usage.percpu_usage[i];
-            let percent = get_cpu_percent(val,
-                                          delayed_val,
-                                          system_usage,
-                                          delayed_system_usage,
-                                          cpus);
-            percpus.push(percent);
-        }*/</span>
-
+        <span class='comment'>// name</span>
         <span class='kw'>let</span> <span class='ident'>name</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='ident'>str</span><span class='op'>&gt;</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>Names</span>[<span class='number'>0</span>].<span class='ident'>split</span>(<span class='string'>&quot;/&quot;</span>).<span class='ident'>collect</span>();
+        <span class='kw'>let</span> <span class='ident'>short_name</span> <span class='op'>=</span> <span class='ident'>name</span>[<span class='ident'>name</span>.<span class='ident'>len</span>() <span class='op'>-</span> <span class='number'>1</span>].<span class='ident'>to_string</span>();
 
+        <span class='comment'>// container struct</span>
         <span class='kw'>let</span> <span class='ident'>container</span> <span class='op'>=</span> <span class='ident'>cosmos</span>::<span class='ident'>Container</span> {
-            <span class='ident'>Container</span>: <span class='ident'>name</span>[<span class='ident'>name</span>.<span class='ident'>len</span>() <span class='op'>-</span> <span class='number'>1</span>].<span class='ident'>to_string</span>(),
+            <span class='ident'>Container</span>: <span class='ident'>short_name</span>,
             <span class='ident'>Cpu</span>: <span class='ident'>total_percent</span> <span class='kw'>as</span> <span class='ident'>f32</span>,
             <span class='ident'>Memory</span>: <span class='ident'>delayed_stats</span>.<span class='ident'>memory_stats</span>.<span class='ident'>usage</span>
         };
