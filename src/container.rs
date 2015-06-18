@@ -46,7 +46,7 @@ pub fn get_containers(docker: &docker::Docker) -> Result<Vec<docker::container::
         Ok(containers) => containers,
         Err(_) => {
             let err = io::Error::new(ErrorKind::ConnectionAborted,
-                                 "Can not get containers.");
+                                     "Docker containers could not be found.");
             return Err(err);
         }
     };
@@ -58,7 +58,7 @@ pub fn get_stats_as_cosmos_container(docker: &docker::Docker, container: &docker
         Ok(stats) => stats,
         Err(_) => {
             let err = io::Error::new(ErrorKind::NotConnected,
-                                 "Can not get stats of container.");
+                                     "Docker containers could not be found.");
             return Err(err);
         }
     };
@@ -66,7 +66,7 @@ pub fn get_stats_as_cosmos_container(docker: &docker::Docker, container: &docker
         Ok(stats) => stats,
         Err(_) => {
             let err = io::Error::new(ErrorKind::ConnectionAborted,
-                                 "Can not get stats of container.");
+                                     "Docker containers could not be found.");
             return Err(err);
         }
     };
@@ -79,7 +79,7 @@ pub fn get_hostname(docker: &docker::Docker) -> Result<String> {
         Ok(system_info) => system_info.Name,
         Err(_) => {
             let err = io::Error::new(ErrorKind::NotConnected,
-                                     "Can not get hostname of docker system info.");
+                                     "Docker infomation could not be found.");
             return Err(err);
         }
     };
