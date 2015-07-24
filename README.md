@@ -9,7 +9,7 @@ Curiosity is a container monitoring agent. It runs on each host you want to moni
 You can simply run Curiosity.
 
 ```
-$ docker run -d -v /var/run/docker.sock:/var/run/docker.sock -e COSMOS_HOST=cosmos.io --name curiosity cosmoshq/curiosity:nightly
+$ docker run -d -v /var/run/docker.sock:/var/run/docker.sock -e COSMOS_HOST=cosmos.io --name curiosity cosmosio/curiosity:nightly
 ```
 
 ## Requirements
@@ -27,11 +27,11 @@ It is built with [Rust](http://www.rust-lang.org) that runs blazing fast, preven
 * Rust (>= v1.0.0)
 
 ```
-$ docker run --rm -it -v $(pwd):/source -v /var/run/docker.sock:/var/run/docker.sock -e COSMOS_HOST=cosmos.io cosmoshq/rust
+$ docker run --rm -it -v $(pwd):/source -v /var/run/docker.sock:/var/run/docker.sock -e COSMOS_HOST=cosmos.io cosmosio/rust
 ```
 
 ## Run
 
 ```
-$ docker run --rm --name curiosity -v /var/run/docker.sock:/var/run/docker.sock -e COSMOS_HOST=cosmos.io cosmoshq/curiosity:nightly
+$ docker run --rm --name curiosity -v /var/run/docker.sock:/var/run/docker.sock -e COSMOS_HOST=cosmos.io cosmosio/curiosity:nightly
 ```
