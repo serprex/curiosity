@@ -11,6 +11,6 @@ readme = "README.md"
 keywords = ["cosmos"]
 
 [dependencies]
-docker = "0.0.34"
+docker = "0.0.37"
 cosmos = "0.0.16"
 time = "0.1.32"
