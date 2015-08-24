@@ -12,5 +12,5 @@ keywords = ["cosmos"]
 
 [dependencies]
 docker = "0.0.37"
-cosmos = "0.0.16"
+cosmos = "0.0.17"
 time = "0.1.32"
