@@ -2,12 +2,18 @@
 #![doc(html_root_url="https://cosmos-io.github.io/curiosity/doc")]
 /*extern crate docker;
 extern crate cosmos;
+
+// Third party packages
+extern crate docker; 
+extern crate cosmos;
 extern crate time;
 
+// declare our modules
 mod curiosity;
 mod container;
 mod volume;
 
+// declare our modules
 use std::env;
 
 use curiosity::Curiosity;*/
@@ -63,6 +69,9 @@ fn main() {
     drop(listener);
         
     /*let host = match env::var("COSMOS_HOST") {
+    // if COSMOS_HOST is present in envrionment variables, Ok(host) will be returned
+    // else, Err(_) will be returned
+    let host = match env::var("COSMOS_HOST") {
         Ok(host) => host,
         Err(_) => {
             println!("COSMOS_HOST envrionment variable does not exist.");
