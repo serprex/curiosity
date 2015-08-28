@@ -87,5 +87,5 @@ fn main() {
 
 #[test]
 fn test() {
-    let _ = Curiosity::new();
+    //let _ = Curiosity::new();
 }
