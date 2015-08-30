@@ -8,9 +8,7 @@ homepage = "https://github.com/cosmos-io/curiosity"
 repository = "https://github.com/cosmos-io/curiosity.git"
 documentation = "https://cosmos-io.github.io/curiosity/doc/curiosity"
 readme = "README.md"
-keywords = ["cosmos"]
+keywords = ["cosmos", "curiosity"]
 
 [dependencies]
-docker = "0.0.37"
-cosmos = "0.0.17"
-time = "0.1.32"
+docker = "0.0.40"
