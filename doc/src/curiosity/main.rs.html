@@ -291,7 +291,7 @@ use curiosity::Curiosity;*/</span>
     <span class='kw'>let</span> _ <span class='op'>=</span> <span class='ident'>stream</span>.<span class='ident'>shutdown</span>(<span class='ident'>Shutdown</span>::<span class='ident'>Write</span>); <span class='comment'>// close a connection</span>
 
     <span class='kw'>let</span> <span class='ident'>docker</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>get_docker</span>());
-    <span class='kw'>let</span> <span class='ident'>image</span> <span class='op'>=</span> <span class='string'>&quot;cosmoshq/curiosity&quot;</span>.<span class='ident'>to_string</span>();
+    <span class='kw'>let</span> <span class='ident'>image</span> <span class='op'>=</span> <span class='string'>&quot;cosmosio/curiosity&quot;</span>.<span class='ident'>to_string</span>();
     <span class='kw'>let</span> <span class='ident'>tag</span> <span class='op'>=</span> <span class='string'>&quot;nightly&quot;</span>.<span class='ident'>to_string</span>();
     <span class='kw'>let</span> <span class='ident'>statuses</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>docker</span>.<span class='ident'>create_image</span>(<span class='ident'>image</span>, <span class='ident'>tag</span>));
 
