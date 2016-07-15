@@ -1,7 +1,7 @@
 [package]
 name = "curiosity"
 description = "Curiosity is a monitoring container."
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Graham Lee <ghmlee@cosmos.io>"]
 license = "Apache-2.0"
 homepage = "https://github.com/cosmos-io/curiosity"
@@ -11,4 +11,4 @@ readme = "README.md"
 keywords = ["cosmos", "curiosity"]
 
 [dependencies]
-docker = "0.0.40"
+docker = "0.0.41"

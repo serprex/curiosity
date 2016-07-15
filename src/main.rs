@@ -4,7 +4,6 @@
 // Third party packages
 extern crate docker;
 extern crate cosmos;
-extern crate time;
 
 // declare our modules
 mod curiosity;
@@ -94,7 +93,7 @@ fn handle_client(s: TcpStream) -> std::io::Result<()> {
     let _ = stream.write(response.as_bytes());
     let _ = stream.shutdown(Shutdown::Write); // close a connection
 
-    let docker = try!(get_docker());
+    let mut docker = try!(get_docker());
     let image = "cosmosio/curiosity".to_string();
     let tag = "nightly".to_string();
     let statuses = try!(docker.create_image(image, tag));

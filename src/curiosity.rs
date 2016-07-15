@@ -1,4 +1,5 @@
 use std::thread;
+use std::time::{Instant, Duration};
 use std::sync::Arc;
 use std::sync::mpsc::{self, Sender, Receiver};
 use std::collections::HashMap;
@@ -6,7 +7,6 @@ use std::collections::hash_map::Entry::{Occupied, Vacant};
 use cosmos::{self, Cosmos};
 use docker;
 use container;
-use time;
 
 pub struct Curiosity;
 
@@ -15,7 +15,7 @@ impl Curiosity {
         return Curiosity;
     }
 
-    pub fn run(&self, host: &str, interval: u64) {
+    pub fn run(&self, host: &str, interval: Duration) {
         // A single docker host
         let docker = Arc::new(match container::get_docker() {
             Ok(docker) => docker,
@@ -35,7 +35,7 @@ impl Curiosity {
         println!("{} is used for the planet.", planet);
 
         // timestamp, hash map for saved containers
-        let mut timestamp = time::precise_time_s() as u64;
+        let mut timestamp = Instant::now();
         let mut map: HashMap<String, cosmos::Container> = HashMap::new();
 
         // channels for docker, network
@@ -63,7 +63,7 @@ impl Curiosity {
                 }
             }
 
-            let now = time::precise_time_s() as u64;
+            let now = Instant::now();
             let diff = now - timestamp;
             if diff < interval { continue; }
             timestamp = now;
